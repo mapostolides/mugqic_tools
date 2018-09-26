@@ -1,0 +1,16 @@
+GTF2I	PGS1	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+SLC7A5	SMG1	6	10	Tumor	LIS	ericscript	GeneFusion	False	True	False	False	-1	LIS_S8_L001
+KALRN	KALRN	61	10	Tumor	LIS	defuse	SameGene	True	True	True	True	-1	LIS_S8_L001
+GUSBP4	GUSB	4	11	Tumor	LIS	ericscript	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+DOT1L	DDX5	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+TGFBR3	CSDE1	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+LRRK2	PDCD6IP	3	1	Tumor	LIS	ericscript	GeneFusion	True	True	False	False	-1	LIS_S8_L001
+JAK1	GGA2	3	1	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001
+KIAA1109	PSIP1	2	-1	Tumor	LIS	fusionmap	GeneFusion	False	False	True	True	-1	LIS_S8_L001
+DKK2	TBCK	4	4	Tumor	LIS	ericscript,fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+SLC38A6	HIF1A	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
+IQCG	NUP153	6	1	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001
+NA	GAS5	24	7	Tumor	LIS	defuse	NoDriverGene	False	False	False	False	-1	LIS_S8_L001
+A	B
+C	D
+E	F

@@ -1,0 +1,5 @@
+Gene_Cluster	MLLT11	ETV4	3	1	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001
+Gene_Cluster	ACBD6	SORBS2	5	5	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001
+Gene_Cluster	VAX1	KIAA1598	13	11	Tumor	LIS	ericscript	ReadThrough	True	True	True	True	-1	LIS_S8_L001
+Gene_Cluster	RNF20	MAP2	3	2	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001
+Gene_Cluster	CTCF	RRBP1	4	1	Tumor	LIS	ericscript	GeneFusion	False	False	False	False	-1	LIS_S8_L001

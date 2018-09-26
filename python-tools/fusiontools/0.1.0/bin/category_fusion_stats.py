@@ -1,0 +1,220 @@
+#! /usr/bin/env python
+
+import sys
+#sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/DIPG_analysis_by_samples/Scripts/pygeneann/pygenefusionann")
+#sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
+import pygeneann
+import argparse
+
+# instantiate parser object
+parser = argparse.ArgumentParser()
+
+parser.add_argument('fusion_cluster_file', action='store', help='Fusion reannation file clustered by head/tail genes. (.reann.cluster file)')
+parser.add_argument('sample_name_file', action='store', help='A file containing all sample names')
+
+args = parser.parse_args()
+
+class Sampleinfo():
+    def __init__(self, line):
+        self.sample_name, self.disease, self.sample_type = line.split()
+
+def output_filtered_list(category_list):
+    for c in category_list:
+        #print c.gene1_on_bnd
+        #print c.gene1_close_to_bnd
+        #print c.gene2_on_bnd
+        #print c.gene2_close_to_bnd
+        c.out()
+def output_cnt_table(fusion_list, group_tag="NA"):
+    sample_type_list = ["Tumor", "Normal", "Tumor,Normal"]
+    category_list = ["ReadThrough", "GeneFusion", "TruncatedCoding", "TruncatedNoncoding", "NoDriverGene", "SameGene"]
+    print "Group:", group_tag
+    print "Category\t" + "\t".join(sample_type_list)
+    for category in category_list:
+        print category ,
+        for sample_type in sample_type_list:
+            filtered_list = category_stats.filter_sample_type(fusion_list, sample_type)
+            filtered_list = category_stats.filter_inferred_type(filtered_list, category)
+            print len(filtered_list),
+        print
+
+def get_sample_type(sample):
+    if sample.startswith("DIPG"):
+        if sample.endswith("T"):
+            sample_type = "Tumor"
+        elif sample.endswith("N"):
+            sample_type = "Normal"
+    elif sample.startswith("SJH"):
+            sample_type = "Tumor"
+    elif sample.startswith("GTEX"):
+        sample_type = "Normal"
+    else:
+        print >> sys.stderr, "Unkonwn sample:", sample
+    return sample_type
+
+def output_sample_fusion_cnt(fusion_list, sampleinfo_dict, group_tag):
+    """
+    :param fusion_list: list of CategoryFusion objects
+    :param sampleinfo_dict: dictionary of (sample_name : Sampleinfo object)
+    :param group_tag: String representing name of sample group
+    """
+    sample_list = []
+    for fu in fusion_list:
+        sample_list.extend(fu.samples)
+    out_list = []
+    num = 0
+    for sample in sampleinfo_dict:
+        # e.g. LIS_S8_L001	TP	Total	19
+        out_list.append([sample, sampleinfo_dict[sample].sample_type, group_tag, sample_list.count(sample)])
+    for li in sorted(out_list, key=lambda x:(x[1],x[0])):
+        print "\t".join(map(str, li))
+
+def init_sampleinfo_objects(sample_name_file):
+    """
+    Initializes a dictionary of (sample_name : Sampleinfo object) 
+    """
+    sampleinfo_dict = {}
+    for line in open(sample_name_file, 'r'):
+        sampleinfo = Sampleinfo(line)
+        sampleinfo_dict.setdefault(sampleinfo.sample_name, sampleinfo)
+    return sampleinfo_dict
+
+def get_tools(category_list):
+    """
+    Returns a list of all fusion caller tools that detected fusions
+    in category_list
+
+    :param category_list: a list of CategoryFusions objects
+    """
+    tools = []
+    for fusion in category_stats.category_list:
+        for tool in fusion.tools:
+            if tool not in tools:
+                tools.append(tool)
+    return tools
+
+def get_fusion_types(category_list):
+    """
+    Returns a list of all categories under which fusions in category_list fall
+
+    :param category_list: a list of CategoryFusions objects
+    """
+    fusion_types = []
+    for fusion in category_stats.category_list:
+        if fusion.inferred_fusion_type not in fusion_types:
+            fusion_types.append(fusion.inferred_fusion_type)
+    return fusion_types
+
+def get_num_fusions_per_tool(category_stats):
+    tools = get_tools(category_stats.category_list)
+    fusion_counts = []
+    print "tool" + "\t" + "num_detected_fusions"
+    for tool in tools:
+        # get filtered_list detected by tool
+        filtered_list = category_stats.filter_tools_name(category_stats.category_list, tool)
+        #fusion_counts.append( (tool, len(filtered_list) ) )    
+        print tool + "\t" + str(len(filtered_list))
+    print
+
+def get_num_fusions_per_category(category_stats):
+    categories = get_fusion_types(category_stats.category_list)
+    fusion_counts = []
+    print "category" + "\t" + "num_detected_fusions"
+    for category in categories:
+        filtered_list = category_stats.filter_inferred_type(category_stats.category_list, category)
+        print category + "\t" + str(len(filtered_list)) 
+    print
+
+# init Sampleinfo object using sample_name_files
+sampleinfo_dict = init_sampleinfo_objects(args.sample_name_file)
+
+filter_sample_list = sampleinfo_dict.keys()
+category_stats = pygeneann.CategoryFusionStats(args.fusion_cluster_file)
+
+
+#get count of fusions detected by each tool
+get_num_fusions_per_tool(category_stats)
+
+# get count of fusions falling under each category
+get_num_fusions_per_category(category_stats)
+
+# output number of fusions detected in each sample
+output_sample_fusion_cnt(category_stats.category_list, sampleinfo_dict, group)
+
+# output count table for total
+filtered_list = category_stats.category_list
+filter_sample_list = sampleinfo_dict.keys()
+print >> sys.stderr, "Total input category number:", len(filtered_list)
+group = "Total"
+output_cnt_table(filtered_list, group)
+
+
+
+#SCRAP BELOW
+
+#filtered_list = category_stats.filter_tools_name(filtered_list, "stjude_method_Valid")
+#filtered_list = category_stats.filter_samples(filtered_list, filter_sample_list)
+#filtered_list = category_stats.filter_inferred_type(filtered_list, "ReadThrough")
+#filtered_list = category_stats.filter_inferred_type(filtered_list, "GeneFusion")
+#filtered_list = category_stats.filter_tools_name(filtered_list, "ericscript")
+#output_sample_fusion_cnt(filtered_list, filter_sample_list, group)
+#output_filtered_list(filtered_list)
+
+#filtered_list = category_stats.filter_tools_num(filtered_list, 2)
+#group = "2_tools"
+#output_cnt_table(filtered_list, group)
+
+#filtered_list = category_stats.filter_split_cnt(filtered_list, 5)
+#filtered_list = category_stats.filter_span_cnt(filtered_list, 5)
+#group = "split_span_5"
+#output_cnt_table(filtered_list, group)
+#output_sample_fusion_cnt(filtered_list, sampleinfo_dict, group)
+#output_filtered_list(filtered_list)
+
+"""
+filtered_list = category_stats.filter_tools_num(filtered_list, 3)
+group = "3_tools"
+output_cnt_table(filtered_list, group)
+#output_sample_fusion_cnt(filtered_list, filter_sample_list, group)
+
+filtered_list = category_stats.filter_close_to_bnd(filtered_list)
+group = "on_bnd"
+output_cnt_table(filtered_list, group)
+#output_sample_fusion_cnt(filtered_list, filter_sample_list, group)
+
+filtered_list = category_stats.filter_dna_supp(filtered_list)
+group = "dna_supp"
+output_cnt_table(filtered_list, group)
+#output_sample_fusion_cnt(filtered_list, filter_sample_list, group)
+filtered_list = category_stats.filter_split_cnt(filtered_list, 20)
+filtered_list = category_stats.filter_span_cnt(filtered_list, 20)
+group = "split_span_20"
+output_cnt_table(filtered_list, group)
+#output_sample_fusion_cnt(filtered_list, args.sample_name_file, group)
+"""
+
+"""
+Sample filters
+"""
+#filtered_list = category_stats.filter_recurrent(filter_list, 5)
+#print filtered_list[0].disease
+#filtered_list = category_stats.filter_disease(filtered_list, "DIPG")
+#filtered_list = category_stats.filter_sample_type(filtered_list, "Tumor")
+#filtered_list = category_stats.filter_sample_number(filtered_list, 3, "DIPG")
+#filtered_list = category_stats.filter_split_cnt(filtered_list, 10)
+#filtered_list = category_stats.filter_span_cnt(filtered_list, 10)
+#filtered_list = category_stats.filter_tools_name(filtered_list, "defuse")
+#filtered_list = category_stats.filter_tools_num(filtered_list, 2)
+#filtered_list = category_stats.filter_dna_supp(filtered_list)
+#filtered_list = category_stats.filter_inferred_type(filtered_list, "TruncatedCoding")
+#filtered_list = category_stats.filter_close_to_bnd(filtered_list)
+#filtered_list = category_stats.filter_recurrent(5)
+
+#output_cnt_table(filtered_list)
+#output_sample_fusion_cnt(filtered_list, args.sample_name_file)
+#filtered_list = category_stats.filter_recurrent(filtered_list, 2)
+
+#output_filtered_list(filtered_list)
+
+
+
