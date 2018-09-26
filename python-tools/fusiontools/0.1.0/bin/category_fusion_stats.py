@@ -37,7 +37,6 @@ def output_cnt_table(fusion_list, group_tag="NA"):
             filtered_list = category_stats.filter_inferred_type(filtered_list, category)
             print len(filtered_list),
         print
-
 def get_sample_type(sample):
     if sample.startswith("DIPG"):
         if sample.endswith("T"):
