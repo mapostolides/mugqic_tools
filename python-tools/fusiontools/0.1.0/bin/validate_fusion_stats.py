@@ -95,15 +95,8 @@ class ValidatedFusionStats(CategoryFusionStats):
             validated_gene_pair = (fusion.gene1, fusion.gene2)
             for category_fusion in self.category_list:
                 # check if fusion breakpoints are within genomic loci
-                #if "integrate" in category_fusion.tools:
-                #    integrate_breakpoint_1 = category_fusion.tools_breakpoints_dict_1["integrate"] 
-                #    integrate_breakpoint_2 = category_fusion.tools_breakpoints_dict_2["integrate"] 
-                #else: integrate_breakpoint_1, integrate_breakpoint_2 = -1, -1 
-                #if ( (fusion.start1 <= (category_fusion.breakpoint_1) <= fusion.end1) and 
-                #    ( fusion.start2 <= (category_fusion.breakpoint_2) <= fusion.end2)): #and
                 if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
-                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2)): #and
-                    #validated_gene_pair not in self.true_positive_gene_pairs ): 
+                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2)): 
 
                     self.true_positive_gene_pairs.append(validated_gene_pair)
                     self.true_positives.append(category_fusion)
@@ -149,7 +142,12 @@ class ValidatedFusionStats(CategoryFusionStats):
         false_negatives_file.close()
         self.num_false_negatives = len(self.false_negative_validated_fusions)
  
-         
+    def calculate_sensitivity(self):
+        self.sensitivity = float(self.num_true_positives)/float(len(self.validated_fusions))
+
+    def calculate_precision(self):
+        self.precision = float(self.num_true_positives)/float(self.num_true_positives + self.num_unvalidated_fusions)
+
     def compare_validated_and_output_fusions(self):
         """
         Compares the fusion pairs in the validated fusion file with the detected fusions in the outputted fusion cluster file
@@ -163,26 +161,17 @@ class ValidatedFusionStats(CategoryFusionStats):
         self.find_unvalidated_fusions()
     
         self.find_false_negatives()
-
-    #test: DIDN"T WORK
-    def check_false_positives(self):
-        """
-        Checks to see if either first or second gene of false positive set matches 
-        false negative set
-        """
-        left_validated_fusion_genes = [gene_pair[0] for gene_pair in self.false_negatives]
-        left_false_positive_genes = [gene_pair[0] for gene_pair in self.false_positives]
-        #left_match = [gene for gene in left_false_positive_genes if gene in left_validated_fusion_genes ]
-        left_match = set(left_false_positive_genes).intersection(set(left_validated_fusion_genes))
         
-        right_false_positive_genes = [gene_pair[1] for gene_pair in self.false_positives]
-        right_validated_fusion_genes = [gene_pair[1] for gene_pair in self.false_negatives]
-        #right_match = [gene for gene in right_false_positive_genes if gene in right_validated_fusion_genes ]
-        right_match = set(right_false_positive_genes).intersection(set(right_validated_fusion_genes))
+        self.calculate_sensitivity()
 
-        #[x for x in fusion_list if set(sample_list).intersection(set(x.samples))]
-        return left_match, right_match
-        
+        self.calculate_precision()
+
+    def convert_cff_to_fake_category_file(cff_file):
+        """
+        Converts cff file into category file format, inserting dummy values where needed so that file can be processed
+        by validation tool
+        """
+        #command =         
 
 def generate_filtered_category_file(fusion_stats, output_file, tool=None, num=None):
     """
@@ -228,21 +217,15 @@ fusion_stats_objects.append(two_or_more_fusion_stats)
 fusion_stats_objects.append(total_fusion_stats)
 
 # generate stats
-print 'Tool	num_fusions	num_true_pos	num_unvalidated	num_false_neg'
+print 'Tool	num_fusions	num_true_pos	num_unvalidated	num_false_neg	sensitivity	precision'
 for fusion_stats in fusion_stats_objects:
     #print "generating cluster files for " + fusion_stats_object.name
     # generate TP, FP and FN files
     fusion_stats.compare_validated_and_output_fusions()
     #print '{}	{}	{}'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives) 
-    print '{}	{}	{}	{}	{}	'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives, 
-                                                         fusion_stats.num_unvalidated_fusions, fusion_stats.num_false_negatives)
-#DIDN"T WORK
-# check for differently named genes: check to see if at least one of the false_neg genes matches false negative set
-#integrate_left, integrate_right = fusion_stats_objects[0].check_false_positives()
-
-#print "left false +ives that match left false -ives: ", integrate_left
-#print "right false +ives that match right false -ives: ",integrate_right
-
-# TEST
-
-
+    print '{}	{}	{}	{}	{}	{}	{}	'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives, 
+                                                         fusion_stats.num_unvalidated_fusions, fusion_stats.num_false_negatives, fusion_stats.sensitivity, fusion_stats.precision)
+ 
+# looks at true positives for total_fusions. Some are repeated, but duplication is not detected by the pipeline
+for category_fusion in total_fusion_stats.true_positives:
+    print(category_fusion.tools, category_fusion.chr1, category_fusion.chr2, category_fusion.breakpoint_1, category_fusion.breakpoint_2)

@@ -5,7 +5,8 @@ import sys
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
 import pygeneann
 import argparse
-
+import itertools
+import subprocess
 # instantiate parser object
 parser = argparse.ArgumentParser()
 
@@ -138,7 +139,7 @@ get_num_fusions_per_tool(category_stats)
 get_num_fusions_per_category(category_stats)
 
 # output number of fusions detected in each sample
-output_sample_fusion_cnt(category_stats.category_list, sampleinfo_dict, group)
+#output_sample_fusion_cnt(category_stats.category_list, sampleinfo_dict, group)
 
 # output count table for total
 filtered_list = category_stats.category_list
@@ -146,6 +147,31 @@ filter_sample_list = sampleinfo_dict.keys()
 print >> sys.stderr, "Total input category number:", len(filtered_list)
 group = "Total"
 output_cnt_table(filtered_list, group)
+
+# enumerate all combinations of 1, 2, 3, and 4 tools
+print "ENUMERATING TOOLS"
+combinations = []
+for r in range(1,5):
+    combinations += list(itertools.combinations(["ericscript", "fusionmap", "defuse", "integrate"], r))
+combinations = [list(combination) for combination in combinations]
+#print combinations
+
+#filtering based on fusion being detected by a specific list of tools, and only those tools
+print "FILTERING BY TOOL COMBINATIONS AND WRITING FILE"
+filename = "tool_combination_counts.tsv"
+file1 = open(filename, "w+")
+for combination in combinations:
+    filtered_list = category_stats.category_list
+    # filter out fusions called by a given combination
+    filtered_list = category_stats.filter_tools_name_multi(filtered_list, combination)
+    to_write = str(sorted(combination)) + "\t" + str(len(filtered_list)) + "\n"
+    file1.write(to_write)
+file1.close()
+print "RUNNING R VENN DIAGRAM SCRIPT"
+#subprocess.call ("pwd", shell=True)
+#subprocess.call ("cat tool_combination_counts.tsv", shell=True)
+subprocess.call ("./make_venn_diagram.r", shell=True)
+print "R SUBPROCESS COMPLETE"
 
 
 
