@@ -4,6 +4,7 @@ import sys
 import argparse
 from pygeneann import *
 import os
+import sqlite3
 
 #import numpy as np
 #import pandas as pd
@@ -18,7 +19,7 @@ args = parser.parse_args()
 
 class ValidatedFusion():
     """
-    Represents one line of a validated fusion. Takes in a line in the following format:
+    Represents one line of a validated fusion file. Takes in a line in the following format:
     gene1   gene2   ensg1   ensg2   chr1    chr2    start1  end1    start2  end2
     """
     def __init__(self, validated_fusion_line):
@@ -41,7 +42,7 @@ class ValidatedFusion():
 class ValidatedFusionStats(CategoryFusionStats):
     """
     Takes as input a fusion_cluster_file/category_file, and validated_fusions_file.
-    Generates statistics about alse positives, false negatives, and true positives with respect to
+    Generates statistics about false positives, false negatives, and true positives with respect to
     the validated fusions present in the validated_fusions_file.
     """
 
@@ -52,7 +53,7 @@ class ValidatedFusionStats(CategoryFusionStats):
         self.name = name
         self.cluster_files_dir = "cluster_stats_files"
         # list of true positive CategoryFusion objects
-        self.true_positives = []
+        self.category_true_positives = []
         # list of ValidatedFusion objects
         self.validated_fusions = []
         self.true_positive_validated_fusions = []
@@ -60,7 +61,6 @@ class ValidatedFusionStats(CategoryFusionStats):
         # lists of gene pair tuples       
         self.false_positives = []
         self.true_positive_gene_pairs = []
-        self.validated_gene_pairs = [] 
         # counts
         self.num_true_positives = 0
         self.num_unvalidated_fusions = 0 
@@ -86,26 +86,26 @@ class ValidatedFusionStats(CategoryFusionStats):
         Intersection of validated_fusions and output_fusions gives true positives
         These are all the validated fusions detected by the pipeline
         """
-        # A list of CategoryFusion objects that are true positives detected by pipeline
-        true_positives_file_name = os.path.join(self.cluster_files_dir, self.name + ".true_positives.cluster" )
-        true_positives_file = open(true_positives_file_name, "w+")
+        true_positives_cluster_file = open(os.path.join(self.cluster_files_dir, self.name + ".true_positives.cluster" ), "w+")
         # unvalidated fusions
         self.unvalidated_fusions = self.category_list
         for fusion in self.validated_fusions:
-            validated_gene_pair = (fusion.gene1, fusion.gene2)
             for category_fusion in self.category_list:
-                # check if fusion breakpoints are within genomic loci
+                category_gene_pair = (category_fusion.gene1, category_fusion.gene2)
+                # check if fusion breakpoints are within genomic loci and filter out duplicate calls
                 if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
-                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2)): 
-
-                    self.true_positive_gene_pairs.append(validated_gene_pair)
-                    self.true_positives.append(category_fusion)
-                    # remove fusions that are true positives to generate unvalidated_fusions list
+                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2) ): 
+                    if category_gene_pair not in self.true_positive_gene_pairs: 
+                        # append fusion to true positive list
+                        self.category_true_positives.append(category_fusion)
+                        self.true_positive_gene_pairs.append(category_gene_pair)
+                        true_positives_cluster_file.write(category_fusion.line + "\n") 
+                    # remove  true positives, including duplicates,  to generate unvalidated_fusions list
                     self.unvalidated_fusions.remove(category_fusion)
+
                     if fusion not in self.true_positive_validated_fusions:
                         self.true_positive_validated_fusions.append(fusion)
-                    true_positives_file.write(category_fusion.line + "\n")              
-        true_positives_file.close()
+        true_positives_cluster_file.close()
         self.num_true_positives = len(self.true_positive_gene_pairs)
 
     #def compare_gene_names():
@@ -122,7 +122,7 @@ class ValidatedFusionStats(CategoryFusionStats):
         unvalidated_fusions_file_name= os.path.join( self.cluster_files_dir, self.name + ".unvalidated_fusions.cluster" )
         unvalidated_fusions_file = open(unvalidated_fusions_file_name, "w+")
         # create file
-        #self.unvalidated_fusions = [fusion for fusion in self.category_list if fusion not in [true_pos for true_pos in self.true_positives]]
+        #self.unvalidated_fusions = [fusion for fusion in self.category_list if fusion not in [true_pos for true_pos in self.category_true_positives]]
         for fusion in self.unvalidated_fusions: 
                 unvalidated_fusions_file.write(fusion.line + "\n")
         unvalidated_fusions_file.close()
@@ -166,12 +166,6 @@ class ValidatedFusionStats(CategoryFusionStats):
 
         self.calculate_precision()
 
-    def convert_cff_to_fake_category_file(cff_file):
-        """
-        Converts cff file into category file format, inserting dummy values where needed so that file can be processed
-        by validation tool
-        """
-        #command =         
 
 def generate_filtered_category_file(fusion_stats, output_file, tool=None, num=None):
     """
@@ -193,6 +187,28 @@ def generate_filtered_category_file(fusion_stats, output_file, tool=None, num=No
 
     return output_file
 
+def two_or_more_valfile(fusion_stats_objects):
+    """
+    generate file containing true positive fusions detected by 2 or more tools in validated_fusion_file format
+    Uses the unique string present in the validation file. Does not use gene names
+    """
+    # combine true_positive_validated_fusions lists from each tool into one giant list
+    sublists = [fusion_stats.true_positive_validated_fusions for fusion_stats in fusion_stats_objects]
+    # flatten sublists
+    master_list =  [item.line for sublist in sublists for item in sublist]
+    
+    #master_list = [val_fusion.line for val_fusion in fusion_object_list ]
+    
+    # count the number of times each line is present in master_list
+    count_dict = {}
+    for i in master_list:
+        count_dict[i] = count_dict.get(i, 0) + 1
+    
+    # return sublist of lines that are present 2 or more times
+    two_or_more = [line for line in count_dict.keys() if count_dict[line] >1]
+    print("two_or_more	NaN	{}".format(len(two_or_more)))
+    print("all 	NaN	{}".format(len(count_dict.keys())))
+ 
 # create ValidatedFusionStats object for overall .cluster file 
 total_fusion_stats = ValidatedFusionStats(args.validated_fusions_file, args.fusion_cluster_file, "total")
 
@@ -208,13 +224,9 @@ for tool in tools:
     fusion_stats_object = ValidatedFusionStats(args.validated_fusions_file, category_file, tool)
     fusion_stats_objects.append(fusion_stats_object)
 
-# generate .cluster files for 2 or more tools
-two_or_more_category_file = generate_filtered_category_file(total_fusion_stats, "cluster_stats_files/" + "two_or_more" + ".cluster", num=2)
-two_or_more_fusion_stats = ValidatedFusionStats(args.validated_fusions_file, two_or_more_category_file, "two_or_more")
-fusion_stats_objects.append(two_or_more_fusion_stats)
 
 # append total last
-fusion_stats_objects.append(total_fusion_stats)
+#fusion_stats_objects.append(total_fusion_stats)
 
 # generate stats
 print 'Tool	num_fusions	num_true_pos	num_unvalidated	num_false_neg	sensitivity	precision'
@@ -225,7 +237,19 @@ for fusion_stats in fusion_stats_objects:
     #print '{}	{}	{}'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives) 
     print '{}	{}	{}	{}	{}	{}	{}	'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives, 
                                                          fusion_stats.num_unvalidated_fusions, fusion_stats.num_false_negatives, fusion_stats.sensitivity, fusion_stats.precision)
+
+
+# generate file containing true positive fusions detected by 2 or more tools in validated_fusion_file format
+two_or_more_valfile(fusion_stats_objects)
+ 
+
  
 # looks at true positives for total_fusions. Some are repeated, but duplication is not detected by the pipeline
-for category_fusion in total_fusion_stats.true_positives:
-    print(category_fusion.tools, category_fusion.chr1, category_fusion.chr2, category_fusion.breakpoint_1, category_fusion.breakpoint_2)
+#for category_fusion in total_fusion_stats.true_positives:
+#    print(category_fusion.tools, category_fusion.chr1, category_fusion.chr2, category_fusion.breakpoint_1, category_fusion.breakpoint_2)
+
+
+# generate .cluster files for 2 or more tools
+#two_or_more_category_file = generate_filtered_category_file(total_fusion_stats, "cluster_stats_files/" + "two_or_more" + ".cluster", num=2)
+#two_or_more_fusion_stats = ValidatedFusionStats(args.validated_fusions_file, two_or_more_category_file, "two_or_more")
+#fusion_stats_objects.append(two_or_more_fusion_stats)
