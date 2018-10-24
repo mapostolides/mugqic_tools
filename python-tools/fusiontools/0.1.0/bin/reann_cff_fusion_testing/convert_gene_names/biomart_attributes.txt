@@ -1,0 +1,370 @@
+                                name
+1                    ensembl_gene_id
+2            ensembl_gene_id_version
+3              ensembl_transcript_id
+4      ensembl_transcript_id_version
+5                 ensembl_peptide_id
+6         ensembl_peptide_id_version
+7                    ensembl_exon_id
+8                        description
+9                    chromosome_name
+10                    start_position
+11                      end_position
+12                            strand
+13                              band
+14                  transcript_start
+15                    transcript_end
+16          transcription_start_site
+17                 transcript_length
+18          transcript_gencode_basic
+19                external_gene_name
+20              external_gene_source
+21          external_transcript_name
+22   external_transcript_source_name
+23                  transcript_count
+24        percentage_gene_gc_content
+25                      gene_biotype
+26                transcript_biotype
+27                            source
+28                 transcript_source
+29                           version
+30                transcript_version
+31             phenotype_description
+32                       source_name
+33                 study_external_id
+34                       strain_name
+35                     strain_gender
+36                           p_value
+37                             go_id
+38                         name_1006
+39                   definition_1006
+40                   go_linkage_type
+41                    namespace_1003
+42              goslim_goa_accession
+43            goslim_goa_description
+44                      arrayexpress
+45                              ccds
+46                            chembl
+47          clone_based_ensembl_gene
+48    clone_based_ensembl_transcript
+49             clone_based_vega_gene
+50       clone_based_vega_transcript
+51                       dbass3_name
+52                         dbass3_id
+53                ens_hs_translation
+54                        entrezgene
+55                              embl
+56                              ottg
+57                              ottt
+58              shares_cds_with_ottt
+59                       hgnc_symbol
+60                           hgnc_id
+61                   hgnc_trans_name
+62                               hpa
+63                        protein_id
+64                       kegg_enzyme
+65                               lrg
+66                      ens_lrg_gene
+67                ens_lrg_transcript
+68                            merops
+69                           metacyc
+70            mim_morbid_description
+71              mim_morbid_accession
+72              mim_gene_description
+73                mim_gene_accession
+74                        mirbase_id
+75                 mirbase_accession
+76                mirbase_trans_name
+77                               pdb
+78                          reactome
+79                       refseq_mrna
+80             refseq_mrna_predicted
+81                      refseq_ncrna
+82            refseq_ncrna_predicted
+83                    refseq_peptide
+84          refseq_peptide_predicted
+85                              rfam
+86                   rfam_trans_name
+87      shares_cds_and_utr_with_ottt
+88                              ucsc
+89                           unigene
+90                           uniparc
+91                        unipathway
+92             uniprot_gn_trans_name
+93                        uniprot_gn
+94                  uniprotswissprot
+95                   uniprotsptrembl
+96                   vega_transcript
+97                  vega_translation
+98              wikigene_description
+99                     wikigene_name
+100                      wikigene_id
+101                     affy_hc_g110
+102                    affy_hg_focus
+103                    affy_hg_u133a
+104                  affy_hg_u133a_2
+105                    affy_hg_u133b
+106              affy_hg_u133_plus_2
+107                     affy_hg_u95a
+108                   affy_hg_u95av2
+109                     affy_hg_u95b
+110                     affy_hg_u95c
+111                     affy_hg_u95d
+112                     affy_hg_u95e
+113                     affy_hta_2_0
+114              affy_huex_1_0_st_v2
+115                    affy_hugenefl
+116            affy_hugene_1_0_st_v1
+117            affy_hugene_2_0_st_v1
+118                   affy_primeview
+119                    affy_u133_x3p
+120                  agilent_cgh_44b
+121    agilent_sureprint_g3_ge_8x60k
+122 agilent_sureprint_g3_ge_8x60k_v2
+123     agilent_wholegenome_4x44k_v1
+124     agilent_wholegenome_4x44k_v2
+125                codelink_codelink
+126           illumina_humanht_12_v3
+127           illumina_humanht_12_v4
+128           illumina_humanref_8_v3
+129            illumina_humanwg_6_v1
+130            illumina_humanwg_6_v2
+131            illumina_humanwg_6_v3
+132                 phalanx_onearray
+133                           family
+134               family_description
+135                           gene3d
+136                     gene3d_start
+137                       gene3d_end
+138                            hamap
+139                      hamap_start
+140                        hamap_end
+141                       hmmpanther
+142                 hmmpanther_start
+143                   hmmpanther_end
+144                             pfam
+145                       pfam_start
+146                         pfam_end
+147                            pirsf
+148                      pirsf_start
+149                        pirsf_end
+150                           prints
+151                     prints_start
+152                       prints_end
+153                      scanprosite
+154                scanprosite_start
+155                  scanprosite_end
+156                           pfscan
+157                     pfscan_start
+158                       pfscan_end
+159                            smart
+160                      smart_start
+161                        smart_end
+162                      superfamily
+163                superfamily_start
+164                  superfamily_end
+165                          tigrfam
+166                    tigrfam_start
+167                      tigrfam_end
+168                         interpro
+169       interpro_short_description
+170             interpro_description
+171                   interpro_start
+172                     interpro_end
+173                           ncoils
+174                     ncoils_start
+175                       ncoils_end
+176                              seg
+177                        seg_start
+178                          seg_end
+179                          signalp
+180                    signalp_start
+181                      signalp_end
+182                            tmhmm
+183                      tmhmm_start
+184                        tmhmm_end
+                                                    description         page
+1                                                Gene stable ID feature_page
+2                                        Gene stable ID version feature_page
+3                                          Transcript stable ID feature_page
+4                                  Transcript stable ID version feature_page
+5                                             Protein stable ID feature_page
+6                                     Protein stable ID version feature_page
+7                                                Exon stable ID feature_page
+8                                              Gene description feature_page
+9                                      Chromosome/scaffold name feature_page
+10                                              Gene start (bp) feature_page
+11                                                Gene end (bp) feature_page
+12                                                       Strand feature_page
+13                                               Karyotype band feature_page
+14                                        Transcript start (bp) feature_page
+15                                          Transcript end (bp) feature_page
+16                               Transcription start site (TSS) feature_page
+17                   Transcript length (including UTRs and CDS) feature_page
+18                                     GENCODE basic annotation feature_page
+19                                                    Gene name feature_page
+20                                          Source of gene name feature_page
+21                                              Transcript name feature_page
+22                                    Source of transcript name feature_page
+23                                             Transcript count feature_page
+24                                            Gene % GC content feature_page
+25                                                    Gene type feature_page
+26                                              Transcript type feature_page
+27                                                Source (gene) feature_page
+28                                          Source (transcript) feature_page
+29                                               Version (gene) feature_page
+30                                         Version (transcript) feature_page
+31                                        Phenotype description feature_page
+32                                                  Source name feature_page
+33                                     Study external reference feature_page
+34                                                  Strain name feature_page
+35                                                Strain gender feature_page
+36                                                      P value feature_page
+37                                            GO term accession feature_page
+38                                                 GO term name feature_page
+39                                           GO term definition feature_page
+40                                        GO term evidence code feature_page
+41                                                    GO domain feature_page
+42                                      GOSlim GOA Accession(s) feature_page
+43                                       GOSlim GOA Description feature_page
+44                                              ArrayExpress ID feature_page
+45                                                      CCDS ID feature_page
+46                                                    ChEMBL ID feature_page
+47                                Clone-based (Ensembl) gene ID feature_page
+48                          Clone-based (Ensembl) transcript ID feature_page
+49                                   Clone-based (Vega) gene ID feature_page
+50                             Clone-based (Vega) transcript ID feature_page
+51                    DataBase of Aberrant 3' Splice Sites name feature_page
+52                      DataBase of Aberrant 3' Splice Sites ID feature_page
+53                                 Ensembl Human Translation ID feature_page
+54                                                EntrezGene ID feature_page
+55                               European Nucleotide Archive ID feature_page
+56                                               Havana gene ID feature_page
+57                                         Havana transcript ID feature_page
+58                         Havana transcript having same CDS ID feature_page
+59                                                  HGNC symbol feature_page
+60                                                      HGNC ID feature_page
+61                                      HGNC transcript name ID feature_page
+62                                       Human Protein Atlas ID feature_page
+63                                             INSDC protein ID feature_page
+64                                                      KEGG ID feature_page
+65                                   Locus Reference Genomic ID feature_page
+66                               LRG display in Ensembl gene ID feature_page
+67                         LRG display in Ensembl transcript ID feature_page
+68                           MEROPS - the Peptidase Database ID feature_page
+69                                                   MetaCyc ID feature_page
+70                                      MIM disease description feature_page
+71                                        MIM disease accession feature_page
+72                                         MIM gene description feature_page
+73                                           MIM gene accession feature_page
+74                                                   miRBase ID feature_page
+75                                            miRBase accession feature_page
+76                                   miRBase transcript name ID feature_page
+77                                                       PDB ID feature_page
+78                                                  Reactome ID feature_page
+79                                               RefSeq mRNA ID feature_page
+80                                     RefSeq mRNA predicted ID feature_page
+81                                              RefSeq ncRNA ID feature_page
+82                                    RefSeq ncRNA predicted ID feature_page
+83                                            RefSeq peptide ID feature_page
+84                                  RefSeq peptide predicted ID feature_page
+85                                                      RFAM ID feature_page
+86                                      RFAM transcript name ID feature_page
+87  Transcript having exact match between ENSEMBL and HAVANA ID feature_page
+88                                               UCSC Stable ID feature_page
+89                                                   UniGene ID feature_page
+90                                                   UniParc ID feature_page
+91                                                UniPathway ID feature_page
+92                                   UniProt transcript name ID feature_page
+93                                       UniProtKB Gene Name ID feature_page
+94                                      UniProtKB/Swiss-Prot ID feature_page
+95                                          UniProtKB/TrEMBL ID feature_page
+96                                           Vega transcript ID feature_page
+97                                          Vega translation ID feature_page
+98                                         WikiGene description feature_page
+99                                                WikiGene name feature_page
+100                                                 WikiGene ID feature_page
+101                                          AFFY HC G110 probe feature_page
+102                                         AFFY HG Focus probe feature_page
+103                                         AFFY HG U133A probe feature_page
+104                                       AFFY HG U133A 2 probe feature_page
+105                                         AFFY HG U133B probe feature_page
+106                                   AFFY HG U133 Plus 2 probe feature_page
+107                                          AFFY HG U95A probe feature_page
+108                                        AFFY HG U95Av2 probe feature_page
+109                                          AFFY HG U95B probe feature_page
+110                                          AFFY HG U95C probe feature_page
+111                                          AFFY HG U95D probe feature_page
+112                                          AFFY HG U95E probe feature_page
+113                                          AFFY HTA 2 0 probe feature_page
+114                                   AFFY HuEx 1 0 st v2 probe feature_page
+115                                         AFFY HuGeneFL probe feature_page
+116                                 AFFY HuGene 1 0 st v1 probe feature_page
+117                                 AFFY HuGene 2 0 st v1 probe feature_page
+118                                        AFFY PrimeView probe feature_page
+119                                         AFFY U133 X3P probe feature_page
+120                                       AGILENT CGH 44b probe feature_page
+121                         AGILENT SurePrint G3 GE 8x60k probe feature_page
+122                      AGILENT SurePrint G3 GE 8x60k v2 probe feature_page
+123                          AGILENT WholeGenome 4x44k v1 probe feature_page
+124                          AGILENT WholeGenome 4x44k v2 probe feature_page
+125                                     CODELINK CODELINK probe feature_page
+126                                ILLUMINA HumanHT 12 V3 probe feature_page
+127                                ILLUMINA HumanHT 12 V4 probe feature_page
+128                                ILLUMINA HumanRef 8 V3 probe feature_page
+129                                 ILLUMINA HumanWG 6 V1 probe feature_page
+130                                 ILLUMINA HumanWG 6 V2 probe feature_page
+131                                 ILLUMINA HumanWG 6 V3 probe feature_page
+132                                      PHALANX OneArray probe feature_page
+133                                Ensembl Protein Family ID(s) feature_page
+134                                  Ensembl Family Description feature_page
+135                                                   Gene3D ID feature_page
+136                                                Gene3D start feature_page
+137                                                  Gene3D end feature_page
+138                                                    HAMAP ID feature_page
+139                                                 HAMAP start feature_page
+140                                                   HAMAP end feature_page
+141                                               hmmpanther ID feature_page
+142                                            hmmpanther start feature_page
+143                                              hmmpanther end feature_page
+144                                              Pfam domain ID feature_page
+145                                           Pfam domain start feature_page
+146                                             Pfam domain end feature_page
+147                                             PIRSF domain ID feature_page
+148                                          PIRSF domain start feature_page
+149                                            PIRSF domain end feature_page
+150                                            Prints domain ID feature_page
+151                                         Prints domain start feature_page
+152                                           Prints domain end feature_page
+153                                         PROSITE patterns ID feature_page
+154                                      PROSITE patterns start feature_page
+155                                        PROSITE patterns end feature_page
+156                                         PROSITE profiles ID feature_page
+157                                      PROSITE profiles start feature_page
+158                                        PROSITE profiles end feature_page
+159                                            SMART domains ID feature_page
+160                                         SMART domains start feature_page
+161                                           SMART domains end feature_page
+162                                      Superfamily domains ID feature_page
+163                                   Superfamily domains start feature_page
+164                                     Superfamily domains end feature_page
+165                                           TIGRFAM domain ID feature_page
+166                                        TIGRFAM domain start feature_page
+167                                          TIGRFAM domain end feature_page
+168                                                 Interpro ID feature_page
+169                                  Interpro Short Description feature_page
+170                                        Interpro Description feature_page
+171                                              Interpro start feature_page
+172                                                Interpro end feature_page
+173                                       Coiled-coils (Ncoils) feature_page
+174                                 Coiled-coils (Ncoils) start feature_page
+175                                   Coiled-coils (Ncoils) end feature_page
+176                                        Low complexity (Seg) feature_page
+177                                  Low complexity (Seg) start feature_page
+178                                    Low complexity (Seg) end feature_page
+179                                     Cleavage site (Signalp) feature_page
+180                               Cleavage site (Signalp) start feature_page
+181                                 Cleavage site (Signalp) end feature_page
+182                                       Transmembrane helices feature_page
+183                                 Transmembrane helices start feature_page
+184                                   Transmembrane helices end feature_page
