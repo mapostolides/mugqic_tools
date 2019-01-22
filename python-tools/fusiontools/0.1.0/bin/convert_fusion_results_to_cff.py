@@ -3,30 +3,65 @@
 import sys
 import os
 import argparse
+import subprocess
+import pandas as pd
+
 class FusionResult():
     def __init__(self, tool, line, idxes):
         tmp = line.split()
         idx_chr1, idx_pos1, idx_strand1, idx_chr2, idx_pos2, idx_strand2, idx_split_cnt, idx_pair_cnt, idx_gene1, idx_gene2, idx_gene_location1, idx_gene_location2 = idxes
-
         self.tool = tool
-        self.chr1 = tmp[idx_chr1]
-        self.pos1 = tmp[idx_pos1]
-        self.strand1 = tmp[idx_strand1] if idx_strand1 != "NA" else "NA" 
-        self.chr2 = tmp[idx_chr2]
-        self.pos2 = tmp[idx_pos2]
-        self.strand2 = tmp[idx_strand2] if idx_strand2 != "NA" else "NA"
-        self.split_cnt = tmp[idx_split_cnt] if idx_split_cnt != "NA" else -1
-        self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
-        self.gene1 = tmp[idx_gene1]
-        self.gene2 = tmp[idx_gene2]
+    
+        # STAR-FUSION NEEDS FIELDS ASSIGNED DIFFERENTLY
+        if self.tool == "STAR-Fusion":#chr17:61906923:+
+            # need to remove "chr" prefix 
+            self.chr1 = tmp[idx_chr1].split(":")[0][3:]
+            self.pos1 =  tmp[idx_pos1].split(":")[1]
+            self.strand1 = tmp[idx_strand1].split(":")[2]
+            self.chr2 = tmp[idx_chr2].split(":")[0][3:]
+            self.pos2 = tmp[idx_pos2].split(":")[1]
+            self.strand2 = tmp[idx_strand2].split(":")[2]
+            self.gene1 = tmp[idx_gene1].split("--")[0]
+            self.gene2 = tmp[idx_gene2].split("--")[1]
+ 
+        else:
+            self.chr1 = tmp[idx_chr1]
+            self.pos1 = tmp[idx_pos1]
+            self.strand1 = tmp[idx_strand1] if idx_strand1 != "NA" else "NA" 
+            self.chr2 = tmp[idx_chr2]
+            self.pos2 = tmp[idx_pos2]
+            self.strand2 = tmp[idx_strand2] if idx_strand2 != "NA" else "NA"
+            self.gene1 = tmp[idx_gene1]
+            self.gene2 = tmp[idx_gene2]
+
+        #FIELDS COMMON TO ALL FUSION CALLERS
         self.gene_location1 = tmp[idx_gene_location1] if idx_gene_location1 != "NA" else "NA"
         self.gene_location2 = tmp[idx_gene_location2] if idx_gene_location2 != "NA" else "NA"
+        self.split_cnt = tmp[idx_split_cnt] if idx_split_cnt != "NA" else -1
+        self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
+     
 class FusionResultFile():
     def __init__(self, result_file):
         self.fusion_results = []
         for line in open(result_file, "r"):
             tmp = line.split()
-            if tmp[0] == "cluster_id": ## defuse header
+            if tmp[0] == "#FusionName": ## STAR-Fusion header
+                self.tool = "STAR-Fusion"
+                self._idx_chr1 = tmp.index("LeftBreakpoint")
+                self._idx_chr2 = tmp.index("RightBreakpoint")
+                self._idx_pos1 = tmp.index("LeftBreakpoint") 
+                self._idx_pos2 = tmp.index("RightBreakpoint")
+                self._idx_strand1 = tmp.index("LeftBreakpoint")
+                self._idx_strand2 = tmp.index("RightBreakpoint")
+                self._idx_split_cnt = tmp.index("JunctionReadCount")
+                self._idx_pair_cnt = tmp.index("SpanningFragCount")
+                self._idx_gene1= tmp.index("#FusionName")
+                self._idx_gene2 = tmp.index("#FusionName")
+                self._idx_gene_location1 = "NA"
+                self._idx_gene_location2 = "NA"        
+                
+
+            elif tmp[0] == "cluster_id": ## defuse header
                 self.tool = "Defuse"
             
                 self._idx_chr1 = tmp.index("gene_chromosome1")
@@ -92,7 +127,7 @@ class FusionResultFile():
                 self._idx_gene2 = tmp.index("3P")
                 self._idx_gene_location1 = "NA"
                 self._idx_gene_location2 = "NA"
-                    
+
             else:
                 fusion = FusionResult(self.tool, line, [self._idx_chr1, self._idx_pos1, self._idx_strand1, self._idx_chr2, self._idx_pos2, self._idx_strand2, self._idx_split_cnt, self._idx_pair_cnt, self._idx_gene1, self._idx_gene2, self._idx_gene_location1, self._idx_gene_location2])
                 if fusion.pos1.isdigit() and fusion.pos2.isdigit(): 
@@ -190,14 +225,71 @@ for line in open(args.sample_info_file, 'r'):
             print >> sys.stderr, "Unknown sample type:", tmp[2]
             sys.exit(1)
         break
-        
-out_file = open(os.path.join(args.out_dir, args.sample + "." + args.tool + ".cff"), "w")
+
+cff_path = os.path.join(args.out_dir, args.sample + "." + args.tool + ".cff")        
+out_file = open(cff_path, "w")
 for fusion in fusion_results:
     
     print >> out_file, "\t".join(map(str, [fusion.chr1, fusion.pos1, fusion.strand1, fusion.chr2, fusion.pos2, fusion.strand2, "RNA", sample, sample_type, disease_name, args.tool, fusion.split_cnt, fusion.pair_cnt, \
             fusion.gene1, fusion.gene_location1, fusion.gene2, fusion.gene_location2]))
      
 out_file.close()
+
+#RENAME GENES USING LIMMA SCRIPT TO CONFORM TO CONSENSUS NAMES AS MUCH AS POSSIBLE
+#THIS IS IMPORTANT FOR DOWNSTREAM FUSIONINSPECTOR STEP
+#/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/validation_pipeline/Pipeline-scripts/rename_cff_file_genes.py
+
+# file containing candidate fusions in .cff format
+cff_file = open(cff_path)
+
+# generate left and right gene lists from original .cff file
+table = pd.read_table(cff_file, header=None)
+left_genes = [item[0] for item in table.iloc[0:, 13:14].values.tolist()]
+#left_genes = list(table.iloc[0:, 13:14])#.tolist()
+right_genes = [item[0] for item in table.iloc[0:, 15:16].values.tolist()]
+#right_genes = table.iloc[0:, 15:16]
+cff_file.close()
+
+# convert left and right genes from original .cff file to "limma" R package gene names
+# run R script here
+
+
+# Run external R script, store output using pipe
+sys.stderr.write("RUNNING R limma SCRIPT" + "\n")
+p = subprocess.Popen('/hpf/tools/centos6/R/3.5.1/bin/Rscript /hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/validation_pipeline/Pipeline-scripts/convert_genes_limma.R ' + cff_path, stdout=subprocess.PIPE,  shell=True)
+(output, err) = p.communicate()
+sys.stderr.write("R SUBPROCESS COMPLETE" + "\n")
+
+#sys.stderr.write(output)
+# format R output
+output = str(output).split("\"")
+
+left_genes_renamed, right_genes_renamed = output[1].split(), output[3].split()
+#sys.stderr.write("LEFT GENES" + str(left_genes) + "\n")
+#sys.stderr.write("LEFT GENES RENAMED"+str(left_genes_renamed) + "\n")
+
+# replace NA values with original values to prevent lost information 
+for i in range(0,len(left_genes_renamed)):
+    if left_genes_renamed[i] == 'NA':
+        left_genes_renamed[i] = left_genes[i]
+    if right_genes_renamed[i] == 'NA':
+        right_genes_renamed[i] = right_genes[i]
+
+#sys.stderr.write("LEFT GENES RENAMED REPLACED NA"+str(left_genes_renamed) + "\n")
+
+#open new file for writing
+renamed_gene_file = open(cff_path + ".renamed", 'w+')
+i=0
+#open original .cff file for reading
+for line in open(cff_path):
+    line=line.split()
+    line[13], line[15] = left_genes_renamed[i], right_genes_renamed[i]
+    line = "\t".join(str(x) for x in line)
+    # print line for output to modified .cff file
+    print(line)
+    renamed_gene_file.write(line+"\n")
+    i+=1
+renamed_gene_file.close()
 
 
 

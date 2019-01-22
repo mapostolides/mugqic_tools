@@ -49,7 +49,28 @@ class CategoryFusions():
         self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
         self.line = category_line.strip()
         self.tools_breakpoints_dict_1 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_1 ]) )
-        self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) ) 
+        self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) )
+        # attributes to accrue list of gene names in bed feature file that intersect with breakpoints 
+        self.left = []
+        self.right = []
+        try:
+            self.gene1_candidates = tmp[19] 
+        except IndexError:
+            self.gene1_candidates = ""
+        try:
+            self.gene2_candidates = tmp[20]
+        except IndexError:
+            self.gene2_candidates = ""
+        try:
+            # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
+            self.gene1_strands = tmp[21]
+        except IndexError:
+            self.gene1_strands = ""
+        try:
+            self.gene2_strands = tmp[22]
+        except IndexError:
+            self.gene2_strands = "" 
+
     def out(self):
         print self.line
         
@@ -330,6 +351,7 @@ class CffFusion():
     # chr1 pos1 strand1 chr2 pos2 strand2 library sample_name sample_type disease tool split_cnt span_cnt tool_gene1 tool_gene_area1 tool_gene2 tool_gene_area2 fwd_gene_order bwd_gene_order
     def __init__(self, cff_line):
         tmp = cff_line.split()
+        self.line = cff_line
         # Breadkpoint Zone
         self.chr1 = tmp[0]
         self.pos1 = int(tmp[1])
@@ -350,6 +372,26 @@ class CffFusion():
         self.t_area1 = tmp[14] # exon/utr/intron
         self.t_gene2 = tmp[15]
         self.t_area2 = tmp[16]
+        #FOR USE IN annotate_called_fusion_file.py
+        self.left = []
+        self.right = []
+        try:
+            self.gene1_candidates = tmp[17]
+        except IndexError:
+            self.gene1_candidates = ""
+        try:
+            self.gene2_candidates = tmp[18]
+        except IndexError:
+            self.gene2_candidates = ""
+        try:
+            # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
+            self.gene1_strands = tmp[19]
+        except IndexError:
+            self.gene1_strands = ""
+        try:
+            self.gene2_strands = tmp[20]
+        except IndexError:
+            self.gene2_strands = ""
         # Re-annotation Zone
         # ReadThrough     DTX2    cds     DTX2P1-UPK3BP1-PMS2P11  utr3    True    TrueTrue     True    5.5     1       474827  1       F00000001       CCTCCCGCAGGGCCCTGAGCACCCCAATCCCGGAAAGCCGTTCACTGCCAGAGGGTTTCCCCGCCAGTGCTACCTTCCAGACAACGCCCAGGGCCGCAAG    CCTCCAGGGGCTTCCAGAACCCGGAGACACTGGCTGACATTCCGGCCTCCCCACAGCTGCTGACCGATGGCCACTACATGACGCTGCCCGTGTCTCCGGA
         #if len(tmp) == 33:
