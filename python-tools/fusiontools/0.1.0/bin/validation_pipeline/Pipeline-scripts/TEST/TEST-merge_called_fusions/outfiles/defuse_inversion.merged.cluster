@@ -1,0 +1,2 @@
+#cluster_type    gene1   gene2  max_split_cnt max_span_cnt sample_type disease tools inferred_fusion_type gene1_on_bnd gene1_close_to_bnd  gene2_on_bnd gene2_close_to_bnd dna_supp  samples chr1 breakpoint_1 chr2 breakpoint_2
+NULL	ASXL1	BPIFB6	6689	6493	Tumor	DIPG	integrate,star_fusion,defuse,ericscript,fusionmap	NULL	NULL	NULL	NULL	NULL	-1	SJHGG026_D	chr20	30971125,30971127,30956926,30956924	chr20	31630621,31629816,31631095,31631097,31630613,31630619	ASXL1	BPIFB6	f	f
