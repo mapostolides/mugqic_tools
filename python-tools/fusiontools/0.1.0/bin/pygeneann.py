@@ -95,6 +95,12 @@ class CategoryFusionStats():
             category = CategoryFusions(line)
             self.category_list.append(category)
         self.num_fusions = len(self.category_list)
+        # count number of samples present in category file
+        samples = []
+        for fusion in self.category_list:
+            samples += fusion.samples
+        self.samples = set(samples)
+        self.num_samples = len(self.samples)
 
     def filter_clustered_fusions(self, fusion_list, split=0, span=0, tool_num=0, on_bnd=False, close_to_bnd=False, fusion_type=[]):
         filtered_list = []
@@ -155,7 +161,22 @@ class CategoryFusionStats():
 
     def filter_dna_supp (self, fusion_list):    
         return filter(lambda x:int(x.dna_supp)>0, fusion_list)
-    
+
+    def generate_category_counts(self):
+        """
+        Counts fusions for each category (i.e. self.inferred_fusion_type )
+        return: dictionary of { CategoryName: num_fusions }
+        """
+        category_dict = {}
+        categories = ['SameGene', 'NoDriverGene', 'ReadThrough', 'GeneFusion', 'TruncatedNoncoding', 'TruncatedCoding']
+        for category in categories:
+            category_dict[category] = 0 
+        for fusion in self.category_list:
+            if category_dict[fusion.inferred_fusion_type] == 0:
+                category_dict[fusion.inferred_fusion_type] = 1
+            else: 
+                category_dict[fusion.inferred_fusion_type] += 1          
+        return category_dict
 
 class CffFusionStats():
     __fusion_dict = {}

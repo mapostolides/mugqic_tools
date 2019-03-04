@@ -15,7 +15,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('validated_fusions_file', action='store', help='A file containing a set of validated fusions')
 parser.add_argument('fusion_cluster_file', action='store', help='Fusion reannation file clustered by head/tail genes. (merged.cff.reann.dnasupp.bwafilter.<seq_len>.cluster file)')
-parser.add_argument('sample_name', action='store', help='Name of the sample being validated')
+#parser.add_argument('sample_name', action='store', help='Name of the sample being validated')
 parser.add_argument('output_dir', action='store', help='absolute path of the output directory')
 
 args = parser.parse_args()
@@ -75,8 +75,15 @@ class ValidatedFusionStats(CategoryFusionStats):
             for category_fusion in self.category_list:
                 category_gene_pair = (category_fusion.gene1, category_fusion.gene2)
                 # check if fusion candidate gene list is the samae as validated fusion candidate gene list, and filter out duplicate calls
-                if ( (  fusion.gene1_candidates == category_fusion.gene1_candidates and fusion.gene2_candidates == category_fusion.gene2_candidates) or
-                    (  fusion.gene1_candidates == category_fusion.gene2_candidates and fusion.gene2_candidates == category_fusion.gene1_candidates) ): 
+                fusions_match = (fusion.gene1_candidates == category_fusion.gene1_candidates and fusion.gene2_candidates == category_fusion.gene2_candidates)
+                # account for defuse inverted gene order calls
+                fusions_match_reversed_order = (fusion.gene1_candidates == category_fusion.gene2_candidates and fusion.gene2_candidates == category_fusion.gene1_candidates)
+                #samples_match = (fusion.sample_name in category_fusion.samples)
+                samples_match = True 
+                if ( (fusions_match or fusions_match_reversed_order) and samples_match): 
+                    # flip gene order
+                    if fusions_match_reversed_order:
+                        category_gene_pair = (category_gene_pair[1], category_gene_pair[0])
                     if category_gene_pair not in self.true_positive_gene_pairs: 
                         # append fusion to true positive list
                         self.category_true_positives.append(category_fusion)
@@ -107,10 +114,10 @@ class ValidatedFusionStats(CategoryFusionStats):
             for category_fusion in self.category_list:
                 category_gene_pair = (category_fusion.gene1, category_fusion.gene2)
                 # check if fusion breakpoints are within genomic loci and filter out duplicate calls
-                #if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
-                #    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2) ): 
-                if ( ( fusion.start1 in range(min(category_fusion.breakpoint_1) - slop, max(category_fusion.breakpoint_1) + slop ) ) and 
-                    ( fusion.start2 in range(min(category_fusion.breakpoint_2) - slop, max(category_fusion.breakpoint_2) + slop) ) ): 
+                if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
+                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2) ): 
+                #if ( ( fusion.start1 in range(min(category_fusion.breakpoint_1) - slop, max(category_fusion.breakpoint_1) + slop ) ) and 
+                #    ( fusion.start2 in range(min(category_fusion.breakpoint_2) - slop, max(category_fusion.breakpoint_2) + slop) ) ): 
                     if category_gene_pair not in self.true_positive_gene_pairs: 
                         # append fusion to true positive list
                         self.category_true_positives.append(category_fusion)
@@ -169,6 +176,7 @@ class ValidatedFusionStats(CategoryFusionStats):
         :param self.category_list: file merged.cff.reann.dnasupp.bwafilter.30.cluster, outputted by the pipeline
         """
         true_positives_cluster_file_name = self.find_true_positives_using_candidate_gene_list()
+        #true_positives_cluster_file_name = self.find_true_positives_using_breakpoints()
         
         self.find_unvalidated_fusions()
     
@@ -228,8 +236,14 @@ cluster_outdir = args.output_dir + "/" + "cluster_stats_files" + "/"
 # create ValidatedFusionStats object for overall .cluster file 
 total_fusion_stats = ValidatedFusionStats(cluster_outdir, args.validated_fusions_file, args.fusion_cluster_file, "total")
 
+#TEST
+print(total_fusion_stats.samples)
+print(total_fusion_stats.num_samples)
+#TEST
+
 #validation summary output file
-stats_output_file_name = args.output_dir + "/" + "validation_output_stats." + args.sample_name + ".txt"
+#stats_output_file_name = args.output_dir + "/" + "validation_output_stats." + args.sample_name + ".txt"
+stats_output_file_name = args.output_dir + "/" + "validation_output_stats.txt"
 # erase old data from this file by writing a blank line
 stats_output_file = open(stats_output_file_name, 'w+')
 stats_output_file.write("")
@@ -243,6 +257,7 @@ all_cluster_files = []
 # generate .cluster files for each tool
 #tools = ["defuse", "integrate", "fusionmap", "ericscript", "STAR-Fusion"]
 tools = ["defuse", "integrate", "fusionmap", "ericscript", "star_fusion"]
+#tools = ["defuse", "integrate", "fusionmap", "ericscript"]
 for tool in tools:
     #generate category file
     category_file = generate_filtered_category_file(total_fusion_stats, cluster_outdir + tool + ".cluster", tool=tool)
@@ -263,12 +278,6 @@ for tool in tools:
     fusion_stats_object = ValidatedFusionStats(cluster_outdir, args.validated_fusions_file, category_file, tool + "-two_or_more")
     fusion_stats_objects.append(fusion_stats_object)
 
-#STAR-Fusion + one more
-#STAR_Fusion_plus_one_category_file = generate_filtered_category_file(two_or_more_fusion_stats, cluster_outdir + "STAR-Fusion_plus_one" + ".cluster", tool="STAR-Fusion")
-STAR_Fusion_plus_one_category_file = generate_filtered_category_file(two_or_more_fusion_stats, cluster_outdir + "STAR-Fusion_plus_one" + ".cluster", tool="star_fusion")
-STAR_Fusion_plus_one_fusion_stats = ValidatedFusionStats(cluster_outdir, args.validated_fusions_file, STAR_Fusion_plus_one_category_file, "STAR-Fusion_plus_one") 
-fusion_stats_objects.append(STAR_Fusion_plus_one_fusion_stats)
-
 
 # THREE OR MORE
 # generate .cluster file for 3 or more tools
@@ -277,6 +286,7 @@ three_or_more_fusion_stats = ValidatedFusionStats(cluster_outdir, args.validated
 fusion_stats_objects.append(three_or_more_fusion_stats)
 
 #STAR-Fusion + two more 
+#STAR_Fusion_plus_two_category_file = generate_filtered_category_file(three_or_more_fusion_stats, cluster_outdir + "STAR-Fusion_plus_two" + ".cluster", tool="STAR-Fusion")
 STAR_Fusion_plus_two_category_file = generate_filtered_category_file(three_or_more_fusion_stats, cluster_outdir + "STAR-Fusion_plus_two" + ".cluster", tool="star_fusion")
 STAR_Fusion_plus_two_fusion_stats = ValidatedFusionStats(cluster_outdir, args.validated_fusions_file, STAR_Fusion_plus_two_category_file, "STAR-Fusion_plus_two")
 fusion_stats_objects.append(STAR_Fusion_plus_two_fusion_stats)
@@ -310,12 +320,35 @@ for fusion_stats in fusion_stats_objects:
 stats_output_file.close()
 
 
-# SUMMARY FILE
-#generate_summary_file(merged_TP_list)
+def generate_category_counts(cluster_file):
+    cluster_file = open(cluster_file, 'r+')
+    for line in cluster_file:
+        line = line.split()
+        if line[0] == "#cluster_type": continue
+    
+
+# GENERATE CATEGORY COUNTS FOR EACH CALLER
+tool_cluster_files = [os.path.join(cluster_outdir, tool + ".cluster") for tool in tools]
+print(tool_cluster_files)
+category_count_file = open(os.path.join(args.output_dir, "category_count_file.txt"), 'w+')
+categories = ['GeneFusion', 'SameGene', 'NoDriverGene', 'ReadThrough', 'TruncatedNoncoding', 'TruncatedCoding']
+category_count_file.write("\t".join(["tool"] + categories) + "\n" )
+
+for tool in tools:
+    fusion_stats = CategoryFusionStats(os.path.join(cluster_outdir, tool + ".cluster"))
+    category_dict = fusion_stats.generate_category_counts()
+    print(tool, "Number of fusions:", fusion_stats.num_fusions, category_dict)
+    category_count_file.write("\t".join([tool] + [str(category_dict[category]) for category in categories] ) + "\n" )
+category_count_file.close()
+
+
 
 # ***********
 # SCRAP BELOW
 # ***********
+
+# SUMMARY FILE
+#generate_summary_file(merged_TP_list)
 
 
 
