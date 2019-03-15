@@ -211,18 +211,6 @@ def generate_filtered_category_file(fusion_stats, output_file, tool=None, num=No
     return output_file
 
 
-def generate_summary_file(merged_TP_list ):
-    """
-    generate summary file which contains only the folowing columns: gene1   gene2   max_split_cnt   max_span_cnt    tools   samples chr1    breakpoint_1    chr2    breakpoint_2
-    """
-    merged_TP_summary_file_name = "output/"+ str(merged_TP_list[0].samples[0]) + ".total.true_positives.summary"
-    #print(merged_TP_summary_file_name)
-    merged_TP_summary_file = open(merged_TP_summary_file_name, 'w+')
-    merged_TP_summary_file.write("gene1	gene2	max_split_cnt	max_span_cnt	tools	samples	chr1	breakpoint_1	chr2	breakpoint_2\n")	
-    for fusion in merged_TP_list:
-        # output line of category_fusion using class attributes, since original category_fusion.line string is no longer accurate
-        merged_TP_summary_file.write("\t".join(map(str, [fusion.gene1, fusion.gene2, fusion.max_split_cnt, fusion.max_span_cnt, ",".join(list(set(sorted(fusion.tools)))), ",".join(list(set(fusion.samples))), fusion.chr1, ",".join(list(set([str(bp) for bp in fusion.breakpoint_1]))), fusion.chr2, ",".join(list(set([str(bp) for bp in fusion.breakpoint_2])))])) + "\n")
-
 
 
 
@@ -319,14 +307,6 @@ for fusion_stats in fusion_stats_objects:
     stats_output_file.write('{}	{}	{}	{}	{}	{}	{}\n'.format(fusion_stats.name, fusion_stats.num_fusions, fusion_stats.num_true_positives, fusion_stats.num_unvalidated_fusions, fusion_stats.num_false_negatives, fusion_stats.sensitivity, fusion_stats.precision) )
 stats_output_file.close()
 
-
-def generate_category_counts(cluster_file):
-    cluster_file = open(cluster_file, 'r+')
-    for line in cluster_file:
-        line = line.split()
-        if line[0] == "#cluster_type": continue
-    
-
 # GENERATE CATEGORY COUNTS FOR EACH CALLER
 tool_cluster_files = [os.path.join(cluster_outdir, tool + ".cluster") for tool in tools]
 print(tool_cluster_files)
@@ -341,6 +321,19 @@ for tool in tools:
     category_count_file.write("\t".join([tool] + [str(category_dict[category]) for category in categories] ) + "\n" )
 category_count_file.close()
 
+# GENERATE TRUE POSITIVE CATEGORY COUNTS FOR EACH CALLER
+#fusionmap.true_positives.cluster
+category_count_file = open(os.path.join(args.output_dir, "true_positive.category_count_file.txt"), 'w+')
+categories = ['GeneFusion', 'SameGene', 'NoDriverGene', 'ReadThrough', 'TruncatedNoncoding', 'TruncatedCoding']
+category_count_file.write("\t".join(["tool"] + categories) + "\n" )
+
+for tool in tools:
+    fusion_stats = CategoryFusionStats(os.path.join(cluster_outdir, tool + ".true_positives.cluster"))
+    category_dict = fusion_stats.generate_category_counts()
+    print(tool, "Number of fusions:", fusion_stats.num_fusions, category_dict)
+    category_count_file.write("\t".join([tool] + [str(category_dict[category]) for category in categories] ) + "\n" )
+category_count_file.close()
+
 
 
 # ***********
@@ -348,6 +341,18 @@ category_count_file.close()
 # ***********
 
 # SUMMARY FILE
+#def generate_summary_file(merged_TP_list ):
+#    """
+#    generate summary file which contains only the folowing columns: gene1   gene2   max_split_cnt   max_span_cnt    tools   samples chr1    breakpoint_1    chr2    breakpoint_2
+#    """
+#    merged_TP_summary_file_name = "output/"+ str(merged_TP_list[0].samples[0]) + ".total.true_positives.summary"
+#    #print(merged_TP_summary_file_name)
+#    merged_TP_summary_file = open(merged_TP_summary_file_name, 'w+')
+#    merged_TP_summary_file.write("gene1	gene2	max_split_cnt	max_span_cnt	tools	samples	chr1	breakpoint_1	chr2	breakpoint_2\n")	
+#    for fusion in merged_TP_list:
+#        # output line of category_fusion using class attributes, since original category_fusion.line string is no longer accurate
+#        merged_TP_summary_file.write("\t".join(map(str, [fusion.gene1, fusion.gene2, fusion.max_split_cnt, fusion.max_span_cnt, ",".join(list(set(sorted(fusion.tools)))), ",".join(list(set(fusion.samples))), fusion.chr1, ",".join(list(set([str(bp) for bp in fusion.breakpoint_1]))), fusion.chr2, ",".join(list(set([str(bp) for bp in fusion.breakpoint_2])))])) + "\n")
+#
 #generate_summary_file(merged_TP_list)
 
 
