@@ -10,6 +10,7 @@ class ValidatedFusion():
 
     def __load_validated_fusion(self, validated_fusion_line):
         line = validated_fusion_line.split()
+        #print(validated_fusion_line)
         self.gene1 = line[0]
         self.gene2 =line[1]
         self.gene1_candidates = ""
@@ -32,8 +33,8 @@ class ValidatedFusion():
         # attributes to collect all possible gene mappings from .bed file
         self.left = []
         self.right = []
-        if len(line) > 10:
-            self.sample_name = line[10]
+        self.sample_name = line[10]
+        if len(line) > 11:
             self.gene1_candidates = line[11]
             self.gene2_candidates = line[12]
 

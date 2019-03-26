@@ -1,6 +1,8 @@
 #! /Library/Frameworks/R.framework/Resources/bin/Rscript
 
 library("limma")
+#library("str_detect")
+accounting_for_slash<-0
 
 # instantiate command line arguments
 args <- commandArgs(TRUE)
@@ -20,15 +22,36 @@ cff_file <- read.table(file=file, sep = '\t', header= F, check.names=F, stringsA
 left_genes <- unlist(cff_file[[14]])
 right_genes <- unlist(cff_file[[16]])
 
+if(accounting_for_slash){
+    right_loc <- grep('/', right_genes)
+    print(right_loc)
+    right_x <- strsplit(right_genes[right_loc], split='/')
+    
+    #print("RENAMING / GENES")
+    for(item in right_x){
+        print(item)
+        print(alias2Symbol(unlist(item)))
+    }
+    #print(alias2SymbolTable(unlist(x[1])))
+    
+    #for (gene in right_genes) {
+    #    if ( str_detect(gene,'/')) { print(gene)}
+    #}
+}
+
 official_names_left_genes <- alias2SymbolTable(left_genes)
 official_names_right_genes <- alias2SymbolTable(right_genes)
+
+#print(official_names_right_genes)
 
 # printing to stdout, gets read in by calling python script  
 print( paste(official_names_left_genes, collapse=" " ) )
 print( paste(official_names_right_genes, collapse=" " ) )
+#print( official_names_right_genes[loc] )
 
-# match original list to official names list to account for NA values returned by alias2SymbolTable 
-
+#print('TEST alias2Symbol')
+#print(alias2Symbol('ARPC4-TTLL3'))
+#print('AL831889');print(alias2Symbol('AL831889'))
 
 # SCRAP
 

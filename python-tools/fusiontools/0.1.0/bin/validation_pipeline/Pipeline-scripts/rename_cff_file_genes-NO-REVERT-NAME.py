@@ -2,10 +2,10 @@
 
 import subprocess
 import argparse
-import pandas as pd
+#import pandas as pd
 import os
 import sys
-testing = 0
+testing = 1
 
 # instantiate parser object
 parser = argparse.ArgumentParser()
@@ -28,18 +28,17 @@ args = parser.parse_args()
 #ncbi_gene_info_file = open("/Users/mapostolides/mugqic_tools-debugging/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/convert_gene_names/Homo_sapiens.gene_info") 
 
 # file containing candidate fusions from all 4 fusion callers 
-sim45_fusion_output = open(args.cff_file)
+#fusion_output = open(args.cff_file)
 
-# generate left and right gene lists from original .cff file
-table = pd.read_table(sim45_fusion_output, header=None)
-left_genes = [item[0] for item in table.iloc[0:, 13:14].values.tolist()]
-#left_genes = list(table.iloc[0:, 13:14])#.tolist()
-right_genes = [item[0] for item in table.iloc[0:, 15:16].values.tolist()]
-#right_genes = table.iloc[0:, 15:16]
-sim45_fusion_output.close()
+## generate left and right gene lists from original .cff file
+#table = pd.read_table(sim45_fusion_output, header=None)
+#left_genes = [item[0] for item in table.iloc[0:, 13:14].values.tolist()]
+##left_genes = list(table.iloc[0:, 13:14])#.tolist()
+#right_genes = [item[0] for item in table.iloc[0:, 15:16].values.tolist()]
+##right_genes = table.iloc[0:, 15:16]
+#fusion_output.close()
+
 # convert left and right genes from original .cff file to "limma" R package gene names
-# run R script here
-
 cff_file = args.cff_file
 
 # Run external R script, store output using pipe
@@ -52,24 +51,16 @@ sys.stderr.write("R SUBPROCESS COMPLETE" + "\n")
 # format R output
 output = str(output).split("\"")
 
-if testing: sys.stderr.write("R LIMMA output" + str(output) + "\n")
-
 left_genes_renamed, right_genes_renamed = output[1].split(), output[3].split()
 #sys.stderr.write("LEFT GENES" + str(left_genes) + "\n")
 #sys.stderr.write("LEFT GENES RENAMED"+str(left_genes_renamed) + "\n")
 
-#TEST
-if testing:
-    sys.stderr.write("len(left_genes_renamed)" + str(len(left_genes_renamed))+ "\n" )
-    sys.stderr.write("len(right_genes_renamed)" + str(len(right_genes_renamed)) + "\n")
-#TEST
-
-# replace NA values with original values to prevent lost information 
-for i in range(0,len(left_genes_renamed)):
-    if left_genes_renamed[i] == 'NA':
-        left_genes_renamed[i] = left_genes[i]
-    if right_genes_renamed[i] == 'NA':
-        right_genes_renamed[i] = right_genes[i]
+## replace NA values with original values to prevent lost information 
+#for i in range(0,len(left_genes_renamed)):
+#    if left_genes_renamed[i] == 'NA':
+#        left_genes_renamed[i] = 'UNK' #left_genes[i]
+#    if right_genes_renamed[i] == 'NA':
+#        right_genes_renamed[i] = 'UNK' #right_genes[i]
 
 #sys.stderr.write("LEFT GENES RENAMED REPLACED NA"+str(left_genes_renamed) + "\n")
 

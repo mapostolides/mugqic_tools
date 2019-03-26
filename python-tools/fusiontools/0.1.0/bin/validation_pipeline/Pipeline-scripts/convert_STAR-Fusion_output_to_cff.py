@@ -31,7 +31,7 @@ for line in lines:
 
     STAR_Fusion_outfile.close()# Create STAR_Fusion dict
     #19      14779663        +       19      14800720        -       RNA     smc_rna_sim45   Tumor   VALIDATION      defuse  2       4       EMR3    coding  ZNF333  utr5p
-    tool = "STAR-Fusion"
+    tool = "star_fusion"
     left_chr_bp_strand = tmp[5].split(":") #chr17:61906923:+
     right_chr_bp_strand = tmp[7].split(":") #chr8:110351549:+
     chr1, pos1, strand1  = left_chr_bp_strand 
