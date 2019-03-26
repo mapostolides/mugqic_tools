@@ -1,0 +1,4 @@
+#cluster_type	gene1	gene2	max_split_cnt	max_span_cnt	sample_type	disease	tools	inferred_fusion_type	gene1_on_bnd	gene1_close_to_bnd	gene2_on_bnd	gene2_close_to_bnd	dna_supp	samples	chr1	breakpoint_1	chr2	breakpoint_2	gene1_candidates	gene2_candidates	gene1_strands	gene2_strands
+Gene_Cluster	AC011530.4	AC011530.4	221	256	Tumor	VALIDATION	integrate,defuse,ericscript	SameGene	True	True	True	True	-1	smc_rna_sim45	chr19	46288852	chr19	46283639	DMWD|AC011530.4	DMPK|AC011530.4	r|r	r|r
+Gene_Cluster	HOMER3	COPE	14670	8485	Tumor	VALIDATION	defuse,ericscript	ReadThrough	True	True	True	True	-1	smc_rna_sim45	chr19	19042134	chr19	19023855	HOMER3|AC002985.3	COPE|AC002985.3|HOMER3	r|r	r|r|r
+Gene_Cluster	AC006486.9	AC006486.9	41	46	Tumor	VALIDATION	integrate,defuse,ericscript	SameGene	True	True	True	True	-1	smc_rna_sim45	chr19	42759130	chr19	42759130	ERF|AC006486.9	ERF|AC006486.9	r|r	r|r

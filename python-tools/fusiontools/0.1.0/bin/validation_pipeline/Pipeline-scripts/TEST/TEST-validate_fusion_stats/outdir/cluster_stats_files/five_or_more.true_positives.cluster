@@ -1,0 +1,14 @@
+#cluster_type	gene1	gene2	max_split_cnt	max_span_cnt	sample_type	disease	tools	inferred_fusion_type	gene1_on_bnd	gene1_close_to_bnd	gene2_on_bnd	gene2_close_to_bnd	dna_supp	samples	chr1	breakpoint_1	chr2	breakpoint_2	gene1_candidates	gene2_candidates	gene1_strands	gene2_strands
+Gene_Cluster	GDI2	UBFD1	316	345	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr10	5842561	chr16	23581801	GDI2	UBFD1	r	f
+Gene_Cluster	PFKM	UBXN10	56	53	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr12	48524219	chr1	20517040	PFKM	UBXN10	f	f
+Gene_Cluster	ADAL	ATG2B	49	55	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr15	43635273	chr14	96761504	ADAL	ATG2B	f	r
+Gene_Cluster	GOT2	POU2F2	423	463	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr16	58756056	chr19	42599847	GOT2	POU2F2	r	r
+Gene_Cluster	GDPD1	KLF9	77	88	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr17	57335201	chr9	73002917	GDPD1	KLF9	f	r
+Gene_Cluster	PSMC5	ENY2	1610	1437	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr17	61906923	chr8	110351549	PSMC5|FTSJ3	ENY2	f|r	f
+Gene_Cluster	TMEM59L	MED31	113	141	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr19	18727912	chr17	6553398	TMEM59L	MED31	f	r
+Gene_Cluster	HES1	IFNL1	43	41	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr3	193854837	chr19	39787445	HES1	IFNL1	f	f
+Gene_Cluster	GPX8	UCHL1	224	217	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr5	54457083	chr4	41263732	CDC20B|GPX8	UCHL1	r|f	f
+Gene_Cluster	AK9	CYP7B1	71	71	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr6	109977959	chr8	65509486	AK9	CYP7B1	r	r
+Gene_Cluster	ZNF76	ST7L	309	348	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr6	35258159	chr1	113121036	ZNF76	ST7L	f	r
+Gene_Cluster	TMEM249	TRIM8	66	84	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chr8	145577614	chr10	104414410	TMEM249|GS1-393G12.13	TRIM8	r|r	f
+Gene_Cluster	CT47B1	DMC1	503	573	Tumor	VALIDATION	integrate,defuse,star_fusion,ericscript,fusionmap	GeneFusion	True	True	True	True	-1	smc_rna_sim45	chrX	120008750	chr22	38963632	CT47B1	DMC1	r	r

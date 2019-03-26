@@ -1,0 +1,6 @@
+tool	GeneFusion	SameGene	NoDriverGene	ReadThrough	TruncatedNoncoding	TruncatedCoding
+defuse	35	22	5	6	12	11
+integrate	23	38	0	35	8	7
+fusionmap	24	2	0	1	0	0
+ericscript	26	23	0	32	3	5
+star_fusion	22	1	0	0	0	0
