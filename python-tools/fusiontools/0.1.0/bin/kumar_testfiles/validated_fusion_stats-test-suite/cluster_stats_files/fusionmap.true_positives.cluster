@@ -1,6 +1,0 @@
-Gene_Cluster	GTF2I	PGS1	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
-Gene_Cluster	DOT1L	DDX5	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
-Gene_Cluster	TGFBR3	CSDE1	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
-Gene_Cluster	KIAA1109	PSIP1	2	-1	Tumor	LIS	fusionmap	GeneFusion	False	False	True	True	-1	LIS_S8_L001
-Gene_Cluster	DKK2	TBCK	4	4	Tumor	LIS	ericscript,fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
-Gene_Cluster	SLC38A6	HIF1A	2	-1	Tumor	LIS	fusionmap	GeneFusion	True	True	True	True	-1	LIS_S8_L001
