@@ -232,9 +232,12 @@ class CffFusionStats():
         # find common fusions
 
     # output fusions in a fusion list as clustered fusions
-    def output_clustered_fusions(self, fusion_list, cluster_type):  
+    def output_clustered_fusions(self, fusion_list, cluster_type):
+            # MODIFIED "gene1_list" and "gene2_list" to use called gene names instead of reannotated gene names
             gene1_list = [f.reann_gene1 for f in fusion_list]
             gene2_list = [f.reann_gene2 for f in fusion_list]
+            #gene1_list = [f.t_gene1 for f in fusion_list]
+            #gene2_list = [f.t_gene2 for f in fusion_list]
 
             max_split_cnt = max([f.split_cnt for f in fusion_list])
             max_span_cnt = max([f.span_cnt for f in fusion_list])
@@ -301,7 +304,9 @@ class CffFusionStats():
                 continue
             fusion = CffFusion(line)
             # send fusion to breakpoint cluster later
+            # SUBSTITUTING "reann_gene1" for "t_gene1" to try and work around the "reannotated" gene name obtained from annotation file
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
+            #if fusion.t_gene1 == "NA" or fusion.t_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
                 key = (fusion.reann_gene1, fusion.reann_gene2)  
@@ -396,23 +401,23 @@ class CffFusion():
         #FOR USE IN annotate_called_fusion_file.py
         self.left = []
         self.right = []
-        try:
-            self.gene1_candidates = tmp[17]
-        except IndexError:
-            self.gene1_candidates = ""
-        try:
-            self.gene2_candidates = tmp[18]
-        except IndexError:
-            self.gene2_candidates = ""
-        try:
-            # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
-            self.gene1_strands = tmp[19]
-        except IndexError:
-            self.gene1_strands = ""
-        try:
-            self.gene2_strands = tmp[20]
-        except IndexError:
-            self.gene2_strands = ""
+        #try:
+        #    self.gene1_candidates = tmp[17]
+        #except IndexError:
+        #    self.gene1_candidates = ""
+        #try:
+        #    self.gene2_candidates = tmp[18]
+        #except IndexError:
+        #    self.gene2_candidates = ""
+        #try:
+        #    # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
+        #    self.gene1_strands = tmp[19]
+        #except IndexError:
+        #    self.gene1_strands = ""
+        #try:
+        #    self.gene2_strands = tmp[20]
+        #except IndexError:
+        #    self.gene2_strands = ""
         # Re-annotation Zone
         # ReadThrough     DTX2    cds     DTX2P1-UPK3BP1-PMS2P11  utr3    True    TrueTrue     True    5.5     1       474827  1       F00000001       CCTCCCGCAGGGCCCTGAGCACCCCAATCCCGGAAAGCCGTTCACTGCCAGAGGGTTTCCCCGCCAGTGCTACCTTCCAGACAACGCCCAGGGCCGCAAG    CCTCCAGGGGCTTCCAGAACCCGGAGACACTGGCTGACATTCCGGCCTCCCCACAGCTGCTGACCGATGGCCACTACATGACGCTGCCCGTGTCTCCGGA
         #if len(tmp) == 33:
@@ -561,10 +566,11 @@ class CffFusion():
         
     # compare fusion breakpoints and return in an order of smaller to  bigger
     def get_ordered_breakpoints(self):
-        if self.chr1 < self.chr1:
+        # MODIFIED, SINCE PREVIOUSLY "self.chr1 < self.chr2" was ""self.chr1 < self.chr1", which is clearly a mistake
+        if self.chr1 < self.chr2:
             small_bp = (self.chr1, self.pos1, self.strand1)
             big_bp = (self.chr2, self.pos2, self.strand2)
-        elif self.chr1 == self.chr1 and self.pos1 < self.pos2:
+        elif self.chr1 == self.chr2 and self.pos1 < self.pos2:
             small_bp = (self.chr1, self.pos1, self.strand1)
             big_bp = (self.chr2, self.pos2, self.strand2)
         else:
@@ -703,6 +709,9 @@ class CffFusion():
                         
     # according to fusion strand (defuse style, strands are supporting pairs') return all possible gene fusions;depending on gene1 and gene2 (a,b,c,d), may have to switch pos order
     def __check_gene_pairs(self, genes1, genes2, gene_ann, switch_pos):
+        # check to make sure both genes1 and genes2 have items in them
+        if (not genes1) or (not genes2):
+            return ""
         gene_order = []
         type1 = []
         type2 = []
@@ -874,19 +883,25 @@ class CffFusion():
 
                 
         # gene_order includes: 5' gene >> 3' gene, 5' gene type >> 3' gene type, 5' coding gene idx >> 3' coding gene inx, category
+        # TRY REMOVING "SWAP ORDER" FEATURE, by changin "True" to "False"
+        # ALSO TRY MAKING '+/+' CORRESPOND TO (a, b)
         if self.strand1 == "+" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(a, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, c, gene_ann, True)
+            #gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
         elif self.strand1 == "+" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(a, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, c, gene_ann, True)
+            #gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, a, gene_ann, True)
+            #gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
-        
+            #gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
+
     # realign breakpoints of this fusion to the left most, not finished, how to define "left" when genes are on different chrs 
     def left_aln_fusion_bp(self, refs):
         # provided reference file lacks fusion chr
