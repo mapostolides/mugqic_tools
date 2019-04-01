@@ -888,19 +888,19 @@ class CffFusion():
         if self.strand1 == "+" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(a, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, c, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
+            gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
         elif self.strand1 == "+" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(a, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, c, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
+            gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, a, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
+            gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
+            gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
 
     # realign breakpoints of this fusion to the left most, not finished, how to define "left" when genes are on different chrs 
     def left_aln_fusion_bp(self, refs):
