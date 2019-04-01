@@ -1,0 +1,38 @@
+1) 1	150337395	+	1	183208506	+	RNA	SJHGG081_D	Tumor	DIPG	defuse	51	23	RPRD2	coding	LAMC2	coding
+2) 1	150337397	+	1	183208504	+	RNA	SJHGG081_D	Tumor	DIPG	defuse	52	3	RPRD2	intron	LAMC2	coding
+
+1)
+-in function "__check_gene_pairs", for dictionaries (b:forward strand gene at pos2 ,c:backward strand gene at pos1 ): 
+-score1: 2, is_on_boundary1: False, close_to_boundary1: False
+-max_t1 = (2, False, False, <pygeneann.GeneBed instance at 0x1075facf8>) (for LAMC2 as head)
+-score1 = 3
+( max_t1[0] + max_t2[0] > self.score1 + self.score2) <==> (2 + 0 > 3 + 0)  evaluates to FALSE, gene order is NOT swapped. 
+
+2)
+-in function "__check_gene_pairs", for dictionaries (b:forward strand gene at pos2 ,c:backward strand gene at pos1 ): 
+-score1: 2, is_on_boundary1: False, close_to_boundary1: False
+(  max_t1[0] + max_t2[0] > self.score1 + self.score2) <==> ( 2 + 0 > 1 + 0) evaluates to TRUE, so gene order IS swapped.
+
+
+It turns out that the above decision to either "swap" or "not swap" gene order is related to a "self.score1" value which is determined by the following line:
+"score1, is_on_boundary1, close_to_boundary1 = self.__cal_score(bpann1, "head")"
+
+It seems that a "good" score is being given to 1)'s "self.score1" since gene RPRD2's breakpoint has values :
+score1, is_on_boundary1, close_to_boundary1 = 3, True, True
+
+However, a "bad" score is being given to 2)'s "self.score1" since gene RPRD2's breakpoint has values :
+score1, is_on_boundary1, close_to_boundary1 = 1, False, False
+Therefore, what results is 2) having its gene order swapped due to a "bad" score for RPRD2. 
+
+chr1	150337395	+	chr1	183208506	+	RNA	SJHGG081_D	Tumor	DIPG	defuse	51	23	RPRD2	coding	LAMC2	coding	TruncatedCoding	RPRD2	cds	NA	NA	True	True	NA	NA	3	-1	0	-9	F00000001	AACACCATGGAGTCCATTCAAGGCTTGTCGTCTTGGTGTATAGAGAACAAAAAACACCACAGTACTATCGTCTATCATTGGATGAAGTGGCTCCGGAGAT	GTCAAACTCTGAAATGAAGAAAAGAAAAAACTGCCGTGAAGATGAAAGCAAATTTACAAATGAGTGAAAGGGGCTGATGTTGTAAAGAAAAATTCCTGAA	False	GT	AG
+chr1	183208504	+	chr1	150337397	+	RNA	SJHGG081_D	Tumor	DIPG	defuse	52	3	LAMC2	coding	RPRD2	intron	TruncatedCoding	LAMC2	cds	NA	NA	False	False	NA	NA	2	-1	0	-9	F00000002	CTTTCAGGAATTTTTCTTTACAACATCAGCCCCTTTCACTCATTTGTAAATTTGCTTTCATCTTCACGGCAGTTTTTTCTTTTCTTCATTTCAGAGTTTG	ACATCTCCGGAGCCACTTCATCCAATGATAGACGATAGTACTGTGGTGTTTTTTGTTCTCTATACACCAAGACGACAAGCCTTGAATGGACTCCATGGTG	False	AC	TC
+
+The above seems not to be a big deal, since 1) is still a "correct" call which has not had its gene order swapped.
+However, after running the "generate_common_fusion_stats.py" script, the two fusions are merged as such:
+
+BP_Cluster	LAMC2,RPRD2	NA	52	23	Tumor	DIPG	defuse	TruncatedCoding	True	True	False	False	-9	SJHGG081_D	chr1	150337395,183208504	chr1	150337397,183208506
+
+The reason for the "NA" in the second column is because there are two values for gene name that are being used in Yue's annotation script:  "reann_gene1, reann_gene2" and "t_gene1, t_gene2"
+- "t_gene1" is the "input" gene name, provided by the input .cff file
+- "reann_gene1" is assigned a value *only* if boolean (  max_t1[0] + max_t2[0] > self.score1 + self.score2) evaluates to True, and the subsequence code block of assignments is executed
+
