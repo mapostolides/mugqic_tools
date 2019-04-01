@@ -2,7 +2,7 @@
 import sys
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/DIPG_analysis_by_samples/Scripts/pygeneann/pygenefusionann")
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
-import pygeneann
+import pygeneann-OLD
 import sequtils
 import pysam
 import argparse
