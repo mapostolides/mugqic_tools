@@ -306,10 +306,11 @@ class CffFusionStats():
             # send fusion to breakpoint cluster later
             # SUBSTITUTING "reann_gene1" for "t_gene1" to try and work around the "reannotated" gene name obtained from annotation file
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
-            #if fusion.t_gene1 == "NA" or fusion.t_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
-                key = (fusion.reann_gene1, fusion.reann_gene2)  
+                # need to account for inverted fusions (e.g. ATP9A--INSR and INSR--ATP9A)
+                #if fusion_dict[(fusion.reann_gene2, fusion.reann_gene1):
+
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:
