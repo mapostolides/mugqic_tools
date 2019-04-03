@@ -2,11 +2,11 @@
 import sys
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/DIPG_analysis_by_samples/Scripts/pygeneann/pygenefusionann")
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
-import pygeneann-OLD
+import pygeneann_OLD as pygeneann
 import sequtils
 import pysam
 import argparse
-
+import os
 
 
 #parser = argparse.ArgumentParser()
@@ -15,13 +15,14 @@ import argparse
 #parser.add_argument('ensbed', action='store', help='Ensemble gene file')
 #parser.add_argument('ref_fa', action='store', help='Reference genome file')
 
+top_dir="/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin"
 #args = parser.parse_args()
 #cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files/merged.cff_RPRD2--LAMC2"
 #cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files/yue_stjude/merged.cff"
-cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files/merged.cff"
-ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_ensID.bed"
+cff_file=os.path.join(top_dir, "reann_cff_fusion_testing/cff_files/merged.cff_strand_info")
+ensbed=os.path.join(top_dir, "reann_cff_fusion_testing/ens_known_genes.bed")
 #ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_ensID_RPRD2_LAMC2.bed"
-ref_fa="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/human_g1k_v37_decoy.fasta"
+ref_fa=os.path.join(top_dir, "reann_cff_fusion_testing/human_g1k_v37_decoy.fasta")
 
 #Load bed format gene annotation, current support knowngene.bed's format, map given genomic loactions to genens, return matched gene list
 gene_ann = pygeneann.GeneAnnotation(ensbed)
