@@ -13,6 +13,7 @@ import re
 # Category file format:
 #Gene_Cluster    HES1    IFNL1   43      41      Tumor   VALIDATION      integrate,defuse,ericscript     GeneFusion      True    True    True    True    -1      smc_rna_sim45   chr3    193854837       chr19   39787445
 
+
 class CategoryFusions():
     """
     Represents a line of the output file of the fusion pipeline. Each line of the file represents a possible fusion event.
@@ -295,7 +296,7 @@ class CffFusionStats():
 
     # compare gene fusions based on re-annotated gene names, hard to work for truncated fusions, used generate_common_fusion_stats_by_breakpoints for NoDriverGenes and Trucated type fusions
     def generate_common_fusion_stats_by_genes(self, cff_file):
-        fusion_dict = {}
+        fusion_dict = {}  # type: Dict[Any, Any]
         fusion_list_for_bp_cmp = []
         common_key_dict = {}
         # cluster fusions by gene pairs, save in fusion_dict
@@ -308,9 +309,9 @@ class CffFusionStats():
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
-                # need to account for inverted fusions (e.g. ATP9A--INSR and INSR--ATP9A)
+                # need to account for inverted fusions (e.g. ATP9A--INSR and INSR--ATP9A
                 #if fusion_dict[(fusion.reann_gene2, fusion.reann_gene1):
-
+                key = (fusion.reann_gene1, fusion.reann_gene2)
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:
@@ -711,8 +712,8 @@ class CffFusion():
     # according to fusion strand (defuse style, strands are supporting pairs') return all possible gene fusions;depending on gene1 and gene2 (a,b,c,d), may have to switch pos order
     def __check_gene_pairs(self, genes1, genes2, gene_ann, switch_pos):
         # check to make sure both genes1 and genes2 have items in them
-        if (not genes1) or (not genes2):
-            return ""
+#        if (not genes1) or (not genes2):
+#            return ""
         gene_order = []
         type1 = []
         type2 = []
@@ -889,19 +890,23 @@ class CffFusion():
         if self.strand1 == "+" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(a, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, c, gene_ann, True)
-            gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(b, c, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
         elif self.strand1 == "+" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(a, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, c, gene_ann, True)
-            gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(d, c, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, a, gene_ann, True)
-            gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(b, a, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
-            gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(d, a, gene_ann, False)
+            #gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
 
     # realign breakpoints of this fusion to the left most, not finished, how to define "left" when genes are on different chrs 
     def left_aln_fusion_bp(self, refs):
