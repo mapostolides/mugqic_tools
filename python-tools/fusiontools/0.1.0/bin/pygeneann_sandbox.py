@@ -290,11 +290,15 @@ class CffFusionStats():
                 #small_bp2, big_bp2 = fusion2.get_ordered_breakpoints()
                 small_bp2, big_bp2 = (fusion2.chr1, fusion2.pos1, fusion2.strand1), (fusion2.chr2, fusion2.pos2, fusion2.strand2)
                 #check for match without inversion
-                if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff):
+                # make sure gene names match
+                gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene1 and fusion1.reann_gene2 == fusion2.reann_gene2)
+                inverted_gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene2 and fusion1.reann_gene2 == fusion2.reann_gene1)  # type: bool
+                if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff) and gene_names_match:
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
                 # check for inverted match
-                elif cmp_fusion_breakpoints(small_bp1, big_bp2, diff) and cmp_fusion_breakpoints(big_bp1, small_bp2, diff):
+                # inverted gene names match
+                elif cmp_fusion_breakpoints(small_bp1, big_bp2, diff) and cmp_fusion_breakpoints(big_bp1, small_bp2, diff) and inverted_gene_names_match:
                     #if there is an inverted match, then need to flip one of the fusions
                     if fusion1.tool == 'defuse' and fusion2.tool == 'defuse':
                         to_flip = fusion2
