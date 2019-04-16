@@ -252,10 +252,22 @@ class CffFusionStats():
             gene2_close_to_bndry = "True" in [f.gene2_close_to_bndry for f in fusion_list] 
             
             dna_supp_cluster_num = max([int(f.dnasupp) for f in fusion_list])
-            
-            category_list = [f.category for f in fusion_list]   
-            
-            # added 4 new fields to final .cluster file for purposes of validation 
+            category_list = [f.category for f in fusion_list]
+
+            # CORRECTION OF CATEGORIES to account for flipped gene
+            #"ReadThrough"
+            # if one inversion is a readthrough, this takes priority.
+            # Even if gene order somehow ends up being incorrect, should still be categorized as ReadThrough
+            if "ReadThrough" in category_list:
+                category_list = ["ReadThrough"]
+            # NoDriverGene
+            elif list(set(gene1_list)) == ["NA"] and ("NA" not in gene2_list) and ("NoDriverGene" in category_list):
+                category_list = ["NoDriverGene"]
+            # TruncatedCoding
+            elif ("NA" not in gene1_list) and list(set(gene2_list)) == ["NA"] and ("TruncatedCoding" in category_list):
+                category_list = ["TruncatedCoding"]
+
+            # added 4 new fields to final .cluster file for purposes of validation
             chr1_list = [str(f.chr1) for f in fusion_list]
             breakpoint_1_list = [str(f.pos1) for f in fusion_list]
             chr2_list = [str(f.chr2) for f in fusion_list]
@@ -290,36 +302,42 @@ class CffFusionStats():
                 #small_bp2, big_bp2 = fusion2.get_ordered_breakpoints()
                 small_bp2, big_bp2 = (fusion2.chr1, fusion2.pos1, fusion2.strand1), (fusion2.chr2, fusion2.pos2, fusion2.strand2)
                 #check for match without inversion
-                # make sure gene names match
+                # make sure gene names match. There is not gene name inconsistency at this point, since ref_fa was used to name genes
                 gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene1 and fusion1.reann_gene2 == fusion2.reann_gene2)
                 inverted_gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene2 and fusion1.reann_gene2 == fusion2.reann_gene1)  # type: bool
                 if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff) and gene_names_match:
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
                 # check for inverted match
-                # inverted gene names match
                 elif cmp_fusion_breakpoints(small_bp1, big_bp2, diff) and cmp_fusion_breakpoints(big_bp1, small_bp2, diff) and inverted_gene_names_match:
                     #if there is an inverted match, then need to flip one of the fusions
-                    if fusion1.tool == 'defuse' and fusion2.tool == 'defuse':
-                        to_flip = fusion2
-                    elif fusion1.tool == 'defuse':
-                        to_flip = fusion1
-                    elif fusion2.tool == 'defuse':
-                        to_flip = fusion2
-                    else:
-                        to_flip = fusion2
-                    #flip fusion
+                    #if fusion1.tool == 'defuse' and fusion2.tool == 'defuse':
+                    #    to_flip = fusion2
+                    #elif fusion1.tool == 'defuse':
+                    #    to_flip = fusion1
+                    #elif fusion2.tool == 'defuse':
+                    #    to_flip = fusion2
+                    #else:
+                    #    to_flip = fusion2
+
+                    # FLIP FUSION
+                    to_flip = fusion2
                     to_flip.chr1, to_flip.chr2 = to_flip.chr2, to_flip.chr1
                     to_flip.pos1, to_flip.pos2 = to_flip.pos2, to_flip.pos1
                     to_flip.strand1, to_flip.strand2 = to_flip.strand2, to_flip.strand1
                     to_flip.reann_gene1, to_flip.reann_gene2 = to_flip.reann_gene2, to_flip.reann_gene1
                     to_flip.t_area1, to_flip.t_area2 = to_flip.t_area2, to_flip.t_area1
 
+                    # once fusion is flipped, need to re-categorize call (e.g. ReadThrough <==> GeneFusion, TruncatedCoding <==> NoHeadGene )
+                    #categorize_fusion(to_flip)
+                    ## assign fusion to a category according to best score gene pair
+                    # No driver gene
+
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
 
                     #flip_fusion = fusion1, fusion2
-            self.output_clustered_fusions(fusion_cluster_list, "BP_Cluster")
+            self.output_clustered_fusions(fusion_cluster_list, "Gene_and_BP_Cluster")
                 
 
     # compare gene fusions based on re-annotated gene names, hard to work for truncated fusions, used generate_common_fusion_stats_by_breakpoints for NoDriverGenes and Trucated type fusions
@@ -739,9 +757,6 @@ class CffFusion():
                         
     # according to fusion strand (defuse style, strands are supporting pairs') return all possible gene fusions;depending on gene1 and gene2 (a,b,c,d), may have to switch pos order
     def __check_gene_pairs(self, genes1, genes2, gene_ann, switch_pos):
-        # check to make sure both genes1 and genes2 have items in them
-#        if (not genes1) or (not genes2):
-#            return ""
         gene_order = []
         type1 = []
         type2 = []
