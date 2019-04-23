@@ -73,9 +73,9 @@ for line in open(cff_file, "r"):
     fusion.fusion_id = "F" + (str(n)).zfill(8)
 
     # the "check_codon" function somehow shifts breakpoints. I've decided to omit this for now
-    #fusion.check_codon(gene_ann, ref_fa)
-    #if orig_pos != fusion.pos1: # the breakpoints have been shifted
-    #    fusion.ann_gene_order(gene_ann) # remap genes with shifted breakpoints
+    fusion.check_codon(gene_ann, ref_fa)
+    if orig_pos != fusion.pos1: # the breakpoints have been shifted
+        fusion.ann_gene_order(gene_ann) # remap genes with shifted breakpoints
     pygeneann.get_fusion_seq(fusion, ref_fa, 100)
     print fusion.tostring()
     n += 1

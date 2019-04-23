@@ -151,6 +151,9 @@ class CategoryFusionStats():
     def filter_tools_num (self, fusion_list, tools_num):    
         return filter(lambda x:len(x.tools)>=tools_num, fusion_list)
 
+    def filter_tools_num_eq(self, fusion_list, tools_num):    
+        return filter(lambda x:len(x.tools)==tools_num, fusion_list)
+
     def filter_inferred_type (self, fusion_list, inferred_type):    
         return filter(lambda x:x.inferred_fusion_type==inferred_type, fusion_list)
 
@@ -304,8 +307,9 @@ class CffFusionStats():
                 #check for match without inversion
                 # make sure gene names match. There is not gene name inconsistency at this point, since ref_fa was used to name genes
                 gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene1 and fusion1.reann_gene2 == fusion2.reann_gene2)
+                sample_names_match = (fusion1.sample_name == fusion2.sample_name)
                 inverted_gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene2 and fusion1.reann_gene2 == fusion2.reann_gene1)  # type: bool
-                if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff) and gene_names_match:
+                if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff) and gene_names_match and sample_names_match:
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
                 # check for inverted match
