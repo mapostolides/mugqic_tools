@@ -309,7 +309,7 @@ class CffFusionStats():
                 gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene1 and fusion1.reann_gene2 == fusion2.reann_gene2)
                 sample_names_match = (fusion1.sample_name == fusion2.sample_name)
                 inverted_gene_names_match = (fusion1.reann_gene1 == fusion2.reann_gene2 and fusion1.reann_gene2 == fusion2.reann_gene1)  # type: bool
-                if cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff) and gene_names_match and sample_names_match:
+                if ( (cmp_fusion_breakpoints(small_bp1, small_bp2, diff) and cmp_fusion_breakpoints(big_bp1, big_bp2, diff)) or gene_names_match ) and sample_names_match:
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
                 # check for inverted match
