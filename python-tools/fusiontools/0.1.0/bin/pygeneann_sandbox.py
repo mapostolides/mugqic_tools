@@ -145,7 +145,11 @@ class CategoryFusionStats():
         return filter(lambda x:tool_name in x.tools, fusion_list)
     
     def filter_tools_name_multi (self, fusion_list, tool_names):  
-         
+        # filters by combination of tools 
+        return filter(lambda x:sorted(tool_names) == sorted(x.tools), fusion_list)
+
+    def filter_tools_name_multi_v2 (self, fusion_list, tool_names):  
+        # filters out all calls by any of the tools in tool_names 
         return filter(lambda x:sorted(tool_names) == sorted(x.tools), fusion_list)
 
     def filter_tools_num (self, fusion_list, tools_num):    
