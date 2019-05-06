@@ -8,15 +8,24 @@ import sequtils
 import pysam
 import argparse
 
+testing = 1
+if not testing:
+    parser = argparse.ArgumentParser()
+    parser.add_argument('cff_file', action='store', help='CFF file, can be .cff or cff.reann')
+    parser.add_argument('ensbed', action='store', help='Ensemble gene file')
+    parser.add_argument('ref_fa', action='store', help='Reference genome file')
+    args = parser.parse_args()
+    cff_file = args.cff_file
+    ensbed = args.ensbed
+    ref_fa = args.ref_fa
 
+if testing:
+    #cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files_new/merged.cff_GABBR1"
+    cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files_include_SJHGG136_D/merged.cff_include_stjude_validated_LOC727982_AC022311.1_ARHGEF33"
+    #ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_ensID_GABBR1.bed"
+    ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_LOC727982_AC022311.1_ARHGEF33.bed"
+    ref_fa="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/human_g1k_v37_decoy.fasta"
 
-parser = argparse.ArgumentParser()
-
-parser.add_argument('cff_file', action='store', help='CFF file, can be .cff or cff.reann')
-parser.add_argument('ensbed', action='store', help='Ensemble gene file')
-parser.add_argument('ref_fa', action='store', help='Reference genome file')
-
-args = parser.parse_args()
 
 #RPRD2--LAMC2
 #cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files/merged.cff_RPRD2--LAMC2"
@@ -48,9 +57,6 @@ args = parser.parse_args()
 #ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_ensID_RPTOR--PRAME.bed"
 #ref_fa="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/human_g1k_v37_decoy.fasta"
 
-cff_file = args.cff_file
-ensbed = args.ensbed
-ref_fa = args.ref_fa
 #Load bed format gene annotation, current support knowngene.bed's format, map given genomic loactions to genens, return matched gene list
 gene_ann = pygeneann.GeneAnnotation(ensbed)
 
