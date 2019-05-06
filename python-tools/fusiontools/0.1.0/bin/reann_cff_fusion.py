@@ -9,19 +9,35 @@ import argparse
 
 
 
-parser = argparse.ArgumentParser()
+#parser = argparse.ArgumentParser()
 
-parser.add_argument('cff_file', action='store', help='CFF file, can be .cff or cff.reann')
-parser.add_argument('ensbed', action='store', help='Ensemble gene file')
-parser.add_argument('ref_fa', action='store', help='Reference genome file')
+#parser.add_argument('cff_file', action='store', help='CFF file, can be .cff or cff.reann')
+#parser.add_argument('ensbed', action='store', help='Ensemble gene file')
+#parser.add_argument('ref_fa', action='store', help='Reference genome file')
 
-args = parser.parse_args()
+#args = parser.parse_args()
 
+testing=0
+if testing:
+    cff_file="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/cff_files_May6/GALNT2--TNR.cff"
+    ensbed="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/ens_known_genes_GALNT2--TNR.bed"
+    ref_fa="/Users/mapostolides/Desktop/mugqic_tools/python-tools/fusiontools/0.1.0/bin/reann_cff_fusion_testing/human_g1k_v37_decoy.fasta"
+else:
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('cff_file', action='store', help='CFF file, can be .cff or cff.reann')
+    parser.add_argument('ensbed', action='store', help='Ensemble gene file')
+    parser.add_argument('ref_fa', action='store', help='Reference genome file')
+
+    args = parser.parse_args()
+    cff_file = args.cff_file
+    ensbed = args.ensbed
+    ref_fa=args.ref_fa
 #Load bed format gene annotation, current support knowngene.bed's format, map given genomic loactions to genens, return matched gene list
-gene_ann = pygeneann.GeneAnnotation(args.ensbed)
+gene_ann = pygeneann.GeneAnnotation(ensbed)
 
 n = 1    
-for line in open(args.cff_file, "r"):
+for line in open(cff_file, "r"):
                 
     fusion = pygeneann.CffFusion(line)
     orig_pos = fusion.pos1 # record the pos before shift
@@ -38,10 +54,10 @@ for line in open(args.cff_file, "r"):
     #annotate fusion id and seq
     fusion.fusion_id = "F" + (str(n)).zfill(8)
 
-    fusion.check_codon(gene_ann, args.ref_fa)
+    fusion.check_codon(gene_ann, ref_fa)
     if orig_pos != fusion.pos1: # the breakpoints have been shifted
         fusion.ann_gene_order(gene_ann) # remap genes with shifted breakpoints
-    pygeneann.get_fusion_seq(fusion, args.ref_fa, 100)
+    pygeneann.get_fusion_seq(fusion, ref_fa, 100)
     print fusion.tostring()
     n += 1
 
