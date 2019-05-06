@@ -233,11 +233,33 @@ class CffFusionStats():
 
     # output fusions in a fusion list as clustered fusions
     def output_clustered_fusions(self, fusion_list, cluster_type):
-            # MODIFIED "gene1_list" and "gene2_list" to use called gene names instead of reannotated gene names
-            gene1_list = [f.reann_gene1 for f in fusion_list]
-            gene2_list = [f.reann_gene2 for f in fusion_list]
-            #gene1_list = [f.t_gene1 for f in fusion_list]
-            #gene2_list = [f.t_gene2 for f in fusion_list]
+            #account for flipped fusions for BP_Cluster
+            #ref_fus_bp1,ref_fus_bp2 = fusion_list[0].get_ordered_breakpoints()
+            ref_fus = fusion_list[0]
+            ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
+            #bp1,bp2 = ref_fus_bp1[1],ref_fus_bp2[1]
+            #flip all fusions not ordered the same way as reference:
+            for fusion in fusion_list:
+                fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
+                if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000):
+                    #flip fusion:
+                    fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
+                    fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
+                    fusion.strand1, fusion.strand2 = fusion.strand2, fusion.strand1
+                    #fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
+                    #fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
+                    fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
+                    fusion.reann_type1,fusion.reann_type2 = fusion.reann_type2,fusion.reann_type1
+
+            #need to remove NA values from below lists, but only if there are valid gene names in them
+            gene1_list_orig = [f.reann_gene1 for f in fusion_list]
+            gene1_list = [gene for gene in gene1_list_orig if gene !="NA"]
+            if len(gene1_list) < 1:
+                gene1_list = gene1_list_orig
+            gene2_list_orig = [f.reann_gene2 for f in fusion_list]
+            gene2_list = [gene for gene in gene2_list_orig if gene !="NA"]
+            if len(gene2_list) < 1:
+                gene2_list = gene2_list_orig
 
             max_split_cnt = max([f.split_cnt for f in fusion_list])
             max_span_cnt = max([f.span_cnt for f in fusion_list])
@@ -274,6 +296,9 @@ class CffFusionStats():
                 continue
 
             fusion1 = fusion_list[i]
+            #ORDERED BREAKPOINTS ALLOWS FUSIONS WITH SAME GENE PAIRS TO BE ADDED TO gene_cluster_list,
+            # BUT FUNCTION "output_clustered_fusions" does not account for the fact that gene orders might
+            # be flipped when outputting a cluster
             small_bp1, big_bp1 = fusion1.get_ordered_breakpoints()
             clustered_id.setdefault(i, i)
             fusion_cluster_list = []
@@ -304,9 +329,7 @@ class CffFusionStats():
                 continue
             fusion = CffFusion(line)
             # send fusion to breakpoint cluster later
-            # SUBSTITUTING "reann_gene1" for "t_gene1" to try and work around the "reannotated" gene name obtained from annotation file
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
-            #if fusion.t_gene1 == "NA" or fusion.t_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
                 key = (fusion.reann_gene1, fusion.reann_gene2)  
