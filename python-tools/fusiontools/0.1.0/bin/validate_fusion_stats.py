@@ -6,6 +6,7 @@ from pygeneann import *
 import os
 import sqlite3
 from validation_classes import *
+import itertools
 
 #import numpy as np
 #import pandas as pd
@@ -113,11 +114,15 @@ class ValidatedFusionStats(CategoryFusionStats):
         for fusion in self.validated_fusions:
             for category_fusion in self.category_list:
                 category_gene_pair = (category_fusion.gene1, category_fusion.gene2)
+                # apply slop to multiple breakpoints for a given gene
+                bp1_list = list(itertools.chain(*[range(bp - slop, bp + slop) for bp in category_fusion.breakpoint_1]))
+                bp2_list = list(itertools.chain(*[range(bp - slop, bp + slop) for bp in category_fusion.breakpoint_2]))
                 # check if fusion breakpoints are within genomic loci and filter out duplicate calls
-                if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
-                    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2) ): 
+                #if ( (fusion.start1 <= min(category_fusion.breakpoint_1) and min(category_fusion.breakpoint_1) <= fusion.end1) and 
+                #    ( fusion.start2 <= max(category_fusion.breakpoint_2) and max(category_fusion.breakpoint_2) <= fusion.end2) ): 
                 #if ( ( fusion.start1 in range(min(category_fusion.breakpoint_1) - slop, max(category_fusion.breakpoint_1) + slop ) ) and 
                 #    ( fusion.start2 in range(min(category_fusion.breakpoint_2) - slop, max(category_fusion.breakpoint_2) + slop) ) ): 
+                if fusion.start1 in bp1_list and fusion.start2 in bp2_list: 
                     if category_gene_pair not in self.true_positive_gene_pairs: 
                         # append fusion to true positive list
                         self.category_true_positives.append(category_fusion)
