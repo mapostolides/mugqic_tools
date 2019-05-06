@@ -833,6 +833,14 @@ class CffFusion():
         c = {} # backward strand gene at pos1
         b = {} # forward strand gene at pos2
         d = {} # backward strand gene at pos2
+
+        #swap star_fusion RHS strand to correspond to defuse:
+        if self.tool!="defuse":
+            if self.strand2 == "-":
+                self.strand2 = "+"
+            elif self.strand2 == "+":
+                self.strand2 = "-"
+
         for gene in matched_genes1:
             if gene.strand == "f":
                 a.setdefault(gene.gene_name, []).append(gene)
@@ -843,13 +851,6 @@ class CffFusion():
                 b.setdefault(gene.gene_name, []).append(gene)
             else:
                 d.setdefault(gene.gene_name, []).append(gene)
-
-        #swap star_fusion RHS strand to correspond to defuse:
-        if self.tool=="star_fusion":
-            if self.strand2 == "-":
-                self.strand2 == "+"
-            elif self.strand2 == "+":
-                self.strand2 == "-"
 
         # for tools do not provide defuse-style strand, regenerate strands, this is assuming that gene1 = 5 prime gene and gene2 = 3 prime gene
         if self.strand1 == "NA" or self.strand2 == "NA":
