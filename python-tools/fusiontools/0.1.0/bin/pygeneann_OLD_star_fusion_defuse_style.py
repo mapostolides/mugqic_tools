@@ -234,22 +234,20 @@ class CffFusionStats():
     # output fusions in a fusion list as clustered fusions
     def output_clustered_fusions(self, fusion_list, cluster_type):
             #account for flipped fusions for BP_Cluster
-            #ref_fus_bp1,ref_fus_bp2 = fusion_list[0].get_ordered_breakpoints()
-            ref_fus = fusion_list[0]
-            ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
-            #bp1,bp2 = ref_fus_bp1[1],ref_fus_bp2[1]
-            #flip all fusions not ordered the same way as reference:
-            for fusion in fusion_list:
-                fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
-                if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000):
-                    #flip fusion:
-                    fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
-                    fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
-                    fusion.strand1, fusion.strand2 = fusion.strand2, fusion.strand1
-                    #fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
-                    #fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
-                    fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
-                    fusion.reann_type1,fusion.reann_type2 = fusion.reann_type2,fusion.reann_type1
+            #ref_fus = fusion_list[0]
+            #ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
+            ##flip all fusions not ordered the same way as reference:
+            #for fusion in fusion_list:
+            #    fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
+            #    if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000):
+            #        #flip fusion:
+            #        fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
+            #        fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
+            #        fusion.strand1, fusion.strand2 = fusion.strand2, fusion.strand1
+            #        #fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
+            #        #fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
+            #        fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
+            #        fusion.reann_type1,fusion.reann_type2 = fusion.reann_type2,fusion.reann_type1
 
             #need to remove NA values from below lists, but only if there are valid gene names in them
             gene1_list_orig = [f.reann_gene1 for f in fusion_list]
@@ -858,11 +856,11 @@ class CffFusion():
         d = {} # backward strand gene at pos2
 
         #swap star_fusion RHS strand to correspond to defuse:
-        if self.tool!="defuse":
-            if self.strand2 == "-":
-                self.strand2 = "+"
-            elif self.strand2 == "+":
-                self.strand2 = "-"
+        #if self.tool!="defuse":
+        #    if self.strand2 == "-":
+        #        self.strand2 = "+"
+        #    elif self.strand2 == "+":
+        #        self.strand2 = "-"
 
         for gene in matched_genes1:
             if gene.strand == "f":
