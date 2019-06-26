@@ -3,7 +3,7 @@
 import sys
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/DIPG_analysis_by_samples/Scripts/pygeneann/pygenefusionann")
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
-import pygeneann_sandbox as pygeneann
+import pygeneann_OLD_star_fusion_defuse_style as pygeneann
 import argparse
 import itertools
 import subprocess
@@ -26,6 +26,7 @@ def output_filtered_list(category_list):
         #print c.gene2_on_bnd
         #print c.gene2_close_to_bnd
         c.out()
+
 def output_cnt_table(fusion_list, group_tag="NA"):
     sample_type_list = ["Tumor", "Normal", "Tumor,Normal"]
     category_list = ["ReadThrough", "GeneFusion", "TruncatedCoding", "TruncatedNoncoding", "NoDriverGene", "SameGene"]
@@ -38,6 +39,7 @@ def output_cnt_table(fusion_list, group_tag="NA"):
             filtered_list = category_stats.filter_inferred_type(filtered_list, category)
             print len(filtered_list),
         print
+
 def get_sample_type(sample):
     if sample.startswith("DIPG"):
         if sample.endswith("T"):
@@ -128,7 +130,6 @@ def get_num_fusions_per_category(category_stats):
 # init Sampleinfo object using sample_name_files
 sampleinfo_dict = init_sampleinfo_objects(args.sample_name_file)
 
-filter_sample_list = sampleinfo_dict.keys()
 category_stats = pygeneann.CategoryFusionStats(args.fusion_cluster_file)
 
 
@@ -141,42 +142,65 @@ get_num_fusions_per_category(category_stats)
 # output number of fusions detected in each sample
 #output_sample_fusion_cnt(category_stats.category_list, sampleinfo_dict, group)
 
-# output count table for total
-filtered_list = category_stats.category_list
-filter_sample_list = sampleinfo_dict.keys()
-print >> sys.stderr, "Total input category number:", len(filtered_list)
-group = "Total"
-output_cnt_table(filtered_list, group)
+fusion_list = category_stats.category_list
 
-# enumerate all combinations of 1, 2, 3, and 4 tools
-print "ENUMERATING TOOLS"
+# Apply Covfilter5
+covfilter3=True
+if covfilter3:
+    fusion_list = category_stats.filter_split_cnt(fusion_list, 5)
+    # need to NOT filter out FUSIONMAP calls based on span_cnt, calls are all -1, since fusionmap doesn't give this info
+    fusion_list = [fusion for fusion in fusion_list if (fusion.max_span_cnt >= 5) or ('fusionmap' in fusion.tools and len(fusion.tools)==1)]
+
+
+# output count table for total
+print >> sys.stderr, "Total input category number:", len(fusion_list)
+group = "Total"
+output_cnt_table(fusion_list, group)
+
+# enumerate all combinations of tools
+print("ENUMERATING TOOLS")
 combinations = []
-for r in range(1,5):
-    combinations += list(itertools.combinations(["ericscript", "fusionmap", "defuse", "integrate"], r))
+for r in range(2,6):
+    combinations += list(itertools.combinations(["ericscript", "fusionmap", "defuse", "integrate", "star_fusion"], r))
 combinations = [list(combination) for combination in combinations]
-#print combinations
+print(combinations)
+print(len(combinations))
 
 #filtering based on fusion being detected by a specific list of tools, and only those tools
 print "FILTERING BY TOOL COMBINATIONS AND WRITING FILE"
 filename = "tool_combination_counts.tsv"
 file1 = open(filename, "w+")
+tool_combinations = [] # [0]
+corresponding_counts = [] # [1]
 for combination in combinations:
-    filtered_list = category_stats.category_list
     # filter out fusions called by a given combination
-    filtered_list = category_stats.filter_tools_name_multi(filtered_list, combination)
+    filtered_list = category_stats.filter_tools_name_multi(fusion_list, combination)
     to_write = str(sorted(combination)) + "\t" + str(len(filtered_list)) + "\n"
+    tool_combinations.append(sorted(combination))
+    corresponding_counts.append(len(filtered_list))
     file1.write(to_write)
 file1.close()
-print "RUNNING R VENN DIAGRAM SCRIPT"
+print(tool_combinations)
+#print(type(tuple(tool_combinations)))
+print(corresponding_counts)
+
+# make dictionary of {tool_combinations:corresponding_fusions}
+tool_count_dict={}
+for i in range(len(tool_combinations)):
+    tool_count_dict[",".join(tool_combinations[i])]=corresponding_counts[i]
+#tool_count_dict = dict(itertools.izip(tuple(tool_combinations),tuple(corresponding_counts)))
+print(tool_count_dict)
+#print "RUNNING R VENN DIAGRAM SCRIPT"
 #subprocess.call ("pwd", shell=True)
 #subprocess.call ("cat tool_combination_counts.tsv", shell=True)
-subprocess.call ("./make_venn_diagram.r", shell=True)
-print "R SUBPROCESS COMPLETE"
+#subprocess.call ("./make_venn_diagram.r", shell=True)
+#print "R SUBPROCESS COMPLETE"
 
 
 
 #SCRAP BELOW
 
+#filter_sample_list = sampleinfo_dict.keys()
 #filtered_list = category_stats.filter_tools_name(filtered_list, "stjude_method_Valid")
 #filtered_list = category_stats.filter_samples(filtered_list, filter_sample_list)
 #filtered_list = category_stats.filter_inferred_type(filtered_list, "ReadThrough")
