@@ -41,15 +41,16 @@ class CategoryFusions():
         #0: has data, no dna pairs; >0:  number of dna pair clusters; -1: no data;
         # -2: gene not in annotation; -3: chr not in bam; -4: confilicting window start and end 
         self.samples = tmp[14].split(",")
-        # add 4 new columns for purposes of validation of chromosomal positions with reference to validated fusions
-        self.chr1 = tmp[15]
-        #setting breakpoint to first value in list of breakpoints. Undecided about how to handle the multiple reported breakpoints by different tools
-        self.breakpoint_1 = [int(num) for num in tmp[16].split(',')]
-        self.chr2 = tmp[17]
-        self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
         self.line = category_line.strip()
-        self.tools_breakpoints_dict_1 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_1 ]) )
-        self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) )
+        if len(tmp) > 15:
+            # add 4 new columns for purposes of validation of chromosomal positions with reference to validated fusions
+            self.chr1 = tmp[15]
+            #setting breakpoint to first value in list of breakpoints. Undecided about how to handle the multiple reported breakpoints by different tools
+            self.breakpoint_1 = [int(num) for num in tmp[16].split(',')]
+            self.chr2 = tmp[17]
+            self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
+            self.tools_breakpoints_dict_1 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_1 ]) )
+            self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) )
         # attributes to accrue list of gene names in bed feature file that intersect with breakpoints 
         self.left = []
         self.right = []
