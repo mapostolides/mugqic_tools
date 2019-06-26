@@ -27,6 +27,9 @@ class CategoryFusions():
         self.gene1 = tmp[1]
         self.gene2 = tmp[2]
         self.max_split_cnt = int(tmp[3])
+        # set max_span_cnt to 3 so that integrate span_cnt values are not interpreted as 'NA',
+        # since INTEGRATE does not provide span_cnt value
+        if tmp[4] == 'NA': tmp[4] = 3
         self.max_span_cnt = int(tmp[4])
         self.sample_type = tmp[5] 
         self.disease = tmp[6].split(",")
@@ -337,14 +340,12 @@ class CffFusionStats():
                     to_flip.t_area1, to_flip.t_area2 = to_flip.t_area2, to_flip.t_area1
 
                     # once fusion is flipped, need to re-categorize call (e.g. ReadThrough <==> GeneFusion, TruncatedCoding <==> NoHeadGene )
-                    #categorize_fusion(to_flip)
-                    ## assign fusion to a category according to best score gene pair
-                    # No driver gene
-
+                    if fusion1.category != fusion2.category:
+                        fusion2.category = fusion1.category
+                    
                     clustered_id.setdefault(j, j)
                     fusion_cluster_list.append(fusion2)
 
-                    #flip_fusion = fusion1, fusion2
             self.output_clustered_fusions(fusion_cluster_list, "Gene_and_BP_Cluster")
                 
 
@@ -895,7 +896,7 @@ class CffFusion():
                 a.setdefault(gene.gene_name, []).append(gene)
             else:
                 c.setdefault(gene.gene_name, []).append(gene)
-        for gene in matched_genes2:
+        for gen in matched_genes2:
             if gene.strand == "f":
                 b.setdefault(gene.gene_name, []).append(gene)
             else:
