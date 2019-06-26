@@ -16,12 +16,16 @@ args = parser.parse_args()
 gene_ann = pygeneann.GeneAnnotation(args.ensbed)
 	
 ref = pysam.FastaFile(args.ref_fa)
+
+def remove_underscores(gene):
+    return gene.replace("_",".")
+
 seq_dict ={}
 for line in open(args.cff_file, "r"):
 	fusion = pygeneann.CffFusion(line)
-
-        gene1 = fusion.reann_gene1
-        gene2 = fusion.reann_gene2
+        # in a downstream script, "_" is used as a field separator. Need to remove "_" from gene names 
+        gene1 = remove_underscores(fusion.reann_gene1)
+        gene2 = remove_underscores(fusion.reann_gene2)
         lib = fusion.library
         fusion_id = fusion.fusion_id
 	
