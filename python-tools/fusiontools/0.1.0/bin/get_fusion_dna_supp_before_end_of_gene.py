@@ -89,8 +89,10 @@ for line in open(cff_file, "r"):
 		fusion.dnasupp = supp_cluster_num
 		print fusion.tostring()
 		continue
-	win_chr1 = fusion.chr1
-	win_chr2 = fusion.chr2
+
+        # FORMAT CHROMOSOMES
+	win_chr1 = fusion.chr1[3:]
+	win_chr2 = fusion.chr2[3:]
 	
 	win_strand_reverse1 = False if fusion.strand1 == "+" else True
 	win_strand_reverse2 = False if fusion.strand2 == "+" else True
