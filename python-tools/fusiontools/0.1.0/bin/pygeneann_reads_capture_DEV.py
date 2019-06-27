@@ -1943,20 +1943,63 @@ def format_chr(chr0, ref):
     
     return formatted_chr
 
+def fetch_noncoding_seqs(gene_ann, cff_fusion, ref, bp, gene_order):
+    """
+    Extracts sequences surounding breakpoint for genes which are not in annotation ("NA", or otherwise)
+    Both forward and reverse sequences are extracted, and both will be used to query transcriptome,
+    since strand information is not available for this gene 
+    """
+    seqs = []
+    if gene_order == "head":
+        # extract seqs from lhs and rhs of breakpoint 
+        left_seq = ref.fetch(format_chr(cff_fusion.chr1, ref), bp-101, bp-1) 
+        right_seq = ref.fetch(format_chr(cff_fusion.chr1, ref), bp-1, bp+99)
+        #generate fwd seqs
+        fwd_fusion_seq = left_seq
+        trans_seq1, trans_seq2 = left_seq, right_seq #+"head_fwd" 
+        seqs.append((trans_seq1, trans_seq2, fwd_fusion_seq))
+        #generate rev seqs
+        rev_fusion_seq = sequtils.rc_seq(right_seq, "rc")
+        trans_seq1, trans_seq2 = sequtils.rc_seq(right_seq, "rc"), sequtils.rc_seq(left_seq, "rc") #+ "head_rev"
+        seqs.append((trans_seq1, trans_seq2, rev_fusion_seq))
+
+    elif gene_order == "tail":
+        left_seq = ref.fetch(format_chr(cff_fusion.chr2, ref), bp-101, bp-1)
+        right_seq = ref.fetch(format_chr(cff_fusion.chr2, ref), bp-1, bp+99)
+        #generate fwd seqs
+        fwd_fusion_seq = right_seq # + "tail_fwd" 
+        trans_seq1, trans_seq2 = left_seq, right_seq
+        #trans_seq1, trans_seq2 =  
+        seqs.append((trans_seq1, trans_seq2, fwd_fusion_seq))
+        #generate rev seqs
+        rev_fusion_seq = sequtils.rc_seq(left_seq, "rc") #+"tail_rev"
+        trans_seq1, trans_seq2 = sequtils.rc_seq(right_seq, "rc"), sequtils.rc_seq(left_seq, "rc")
+        print(trans_seq1, trans_seq2)
+        #exit(0)
+        seqs.append((trans_seq1, trans_seq2, rev_fusion_seq))
+    return seqs 
 
 # for a given gene, according to gene_order and bp get all its transcript sequences and 100bp potential fusion sequences (only for head gene)
-def build_transcript_and_fusion_seq(gene_ann, gene_name, ref, bp, gene_order):
-    
+def build_transcript_and_fusion_seq(gene_ann, cff_fusion, ref, bp, gene_order):
+    # get gene name from cff_fusion object
+    if gene_order == "head":
+        gene_name = cff_fusion.reann_gene1 
+    elif gene_order == "tail":
+        gene_name = cff_fusion.reann_gene2
+
+    #noncoding gene
+    noncoding=0
     # get all transcripts for head gene 
     seqs = []
     gene_intervals = gene_ann.get_gene_interval(gene_name)
     tids = gene_intervals.transcript_ids
+    #print(tids)
     if not tids:
-        print >> sys.stderr, "Gene not in annotation:", gene_name
-        print >> sys.stderr, "Can not build ref seq"
+        print >> sys.stderr, """Gene not in annotation: {}. """.format(gene_name) + "Building reference sequence from noncoding region"
+        noncoding=1
+        seqs = fetch_noncoding_seqs(gene_ann, cff_fusion, ref, bp, gene_order)
         return seqs
         
-    #return seqs
     is_head = (gene_order == "head")
     for transcript_id in tids:
         trans_ann_list = gene_ann.get_transcripts_ann(transcript_id) # all GeneBed annotations of transcript_id
@@ -1979,7 +2022,7 @@ def build_transcript_and_fusion_seq(gene_ann, gene_name, ref, bp, gene_order):
                         trans_seqs.append(seq)
                         if ann.end < bp:
                             fusion_seqs.append(seq)
-            else:
+            else: # head gene on reverse strand
                 for ann in trans_ann_list:
                     # breakpoint in current bed annotation
                     if ann.start <= bp <= ann.end:
