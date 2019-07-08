@@ -13,7 +13,6 @@ import re
 # Category file format:
 #Gene_Cluster    HES1    IFNL1   43      41      Tumor   VALIDATION      integrate,defuse,ericscript     GeneFusion      True    True    True    True    -1      smc_rna_sim45   chr3    193854837       chr19   39787445
 
-
 class CategoryFusions():
     """
     Represents a line of the output file of the fusion pipeline. Each line of the file represents a possible fusion event.
@@ -42,15 +41,16 @@ class CategoryFusions():
         #0: has data, no dna pairs; >0:  number of dna pair clusters; -1: no data;
         # -2: gene not in annotation; -3: chr not in bam; -4: confilicting window start and end 
         self.samples = tmp[14].split(",")
-        # add 4 new columns for purposes of validation of chromosomal positions with reference to validated fusions
-        self.chr1 = tmp[15]
-        #setting breakpoint to first value in list of breakpoints. Undecided about how to handle the multiple reported breakpoints by different tools
-        self.breakpoint_1 = [int(num) for num in tmp[16].split(',')]
-        self.chr2 = tmp[17]
-        self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
         self.line = category_line.strip()
-        self.tools_breakpoints_dict_1 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_1 ]) )
-        self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) )
+        if len(tmp) > 15:
+            # add 4 new columns for purposes of validation of chromosomal positions with reference to validated fusions
+            self.chr1 = tmp[15]
+            #setting breakpoint to first value in list of breakpoints. Undecided about how to handle the multiple reported breakpoints by different tools
+            self.breakpoint_1 = [int(num) for num in tmp[16].split(',')]
+            self.chr2 = tmp[17]
+            self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
+            self.tools_breakpoints_dict_1 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_1 ]) )
+            self.tools_breakpoints_dict_2 = dict( zip([tool for tool in self.tools], [breakpoint for breakpoint in self.breakpoint_2 ]) )
         # attributes to accrue list of gene names in bed feature file that intersect with breakpoints 
         self.left = []
         self.right = []
@@ -234,11 +234,33 @@ class CffFusionStats():
 
     # output fusions in a fusion list as clustered fusions
     def output_clustered_fusions(self, fusion_list, cluster_type):
-            # MODIFIED "gene1_list" and "gene2_list" to use called gene names instead of reannotated gene names
-            gene1_list = [f.reann_gene1 for f in fusion_list]
-            gene2_list = [f.reann_gene2 for f in fusion_list]
-            #gene1_list = [f.t_gene1 for f in fusion_list]
-            #gene2_list = [f.t_gene2 for f in fusion_list]
+            use_reference_fusion=1
+            #use first fusion in fusion as reference fusion to account for flipped fusions for BP_Cluster
+            if use_reference_fusion:
+                ref_fus = fusion_list[0]
+                ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
+                #flip all fusions not ordered the same way as reference:
+                for fusion in fusion_list:
+                    fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
+                    if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000):
+                        #flip fusion:
+                        fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
+                        fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
+                        fusion.strand1, fusion.strand2 = fusion.strand2, fusion.strand1
+                        #fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
+                        #fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
+                        fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
+                        fusion.reann_type1,fusion.reann_type2 = fusion.reann_type2,fusion.reann_type1
+
+            #need to remove NA values from below lists, but only if there are valid gene names in them
+            gene1_list_orig = [f.reann_gene1 for f in fusion_list]
+            gene1_list = [gene for gene in gene1_list_orig if gene !="NA"]
+            if len(gene1_list) < 1:
+                gene1_list = gene1_list_orig
+            gene2_list_orig = [f.reann_gene2 for f in fusion_list]
+            gene2_list = [gene for gene in gene2_list_orig if gene !="NA"]
+            if len(gene2_list) < 1:
+                gene2_list = gene2_list_orig
 
             max_split_cnt = max([f.split_cnt for f in fusion_list])
             max_span_cnt = max([f.span_cnt for f in fusion_list])
@@ -275,6 +297,9 @@ class CffFusionStats():
                 continue
 
             fusion1 = fusion_list[i]
+            #ORDERED BREAKPOINTS ALLOWS FUSIONS WITH SAME GENE PAIRS TO BE ADDED TO gene_cluster_list,
+            # BUT FUNCTION "output_clustered_fusions" does not account for the fact that gene orders might
+            # be flipped when outputting a cluster
             small_bp1, big_bp1 = fusion1.get_ordered_breakpoints()
             clustered_id.setdefault(i, i)
             fusion_cluster_list = []
@@ -296,7 +321,7 @@ class CffFusionStats():
 
     # compare gene fusions based on re-annotated gene names, hard to work for truncated fusions, used generate_common_fusion_stats_by_breakpoints for NoDriverGenes and Trucated type fusions
     def generate_common_fusion_stats_by_genes(self, cff_file):
-        fusion_dict = {}  # type: Dict[Any, Any]
+        fusion_dict = {}
         fusion_list_for_bp_cmp = []
         common_key_dict = {}
         # cluster fusions by gene pairs, save in fusion_dict
@@ -305,13 +330,10 @@ class CffFusionStats():
                 continue
             fusion = CffFusion(line)
             # send fusion to breakpoint cluster later
-            # SUBSTITUTING "reann_gene1" for "t_gene1" to try and work around the "reannotated" gene name obtained from annotation file
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
-                # need to account for inverted fusions (e.g. ATP9A--INSR and INSR--ATP9A
-                #if fusion_dict[(fusion.reann_gene2, fusion.reann_gene1):
-                key = (fusion.reann_gene1, fusion.reann_gene2)
+                key = (fusion.reann_gene1, fusion.reann_gene2)  
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:
@@ -712,8 +734,6 @@ class CffFusion():
     # according to fusion strand (defuse style, strands are supporting pairs') return all possible gene fusions;depending on gene1 and gene2 (a,b,c,d), may have to switch pos order
     def __check_gene_pairs(self, genes1, genes2, gene_ann, switch_pos):
         # check to make sure both genes1 and genes2 have items in them
-#        if (not genes1) or (not genes2):
-#            return ""
         gene_order = []
         type1 = []
         type2 = []
@@ -837,6 +857,14 @@ class CffFusion():
         c = {} # backward strand gene at pos1
         b = {} # forward strand gene at pos2
         d = {} # backward strand gene at pos2
+
+        #swap star_fusion RHS strand to correspond to defuse:
+        #if self.tool!="defuse":
+        #    if self.strand2 == "-":
+        #        self.strand2 = "+"
+        #    elif self.strand2 == "+":
+        #        self.strand2 = "-"
+
         for gene in matched_genes1:
             if gene.strand == "f":
                 a.setdefault(gene.gene_name, []).append(gene)
@@ -847,8 +875,8 @@ class CffFusion():
                 b.setdefault(gene.gene_name, []).append(gene)
             else:
                 d.setdefault(gene.gene_name, []).append(gene)
-        # for tools do not provide defuse-style strand, regenerate strands, this is assuming that gene1 = 5 prime gene and gene2 = 3 prime gene
 
+        # for tools do not provide defuse-style strand, regenerate strands, this is assuming that gene1 = 5 prime gene and gene2 = 3 prime gene
         if self.strand1 == "NA" or self.strand2 == "NA":
             gene_interval1 = ""
             gene_interval2 = ""
@@ -887,26 +915,22 @@ class CffFusion():
         # gene_order includes: 5' gene >> 3' gene, 5' gene type >> 3' gene type, 5' coding gene idx >> 3' coding gene inx, category
         # TRY REMOVING "SWAP ORDER" FEATURE, by changin "True" to "False"
         # ALSO TRY MAKING '+/+' CORRESPOND TO (a, b)
+#        a = {} # forward strand gene at pos1
+#        c = {} # backward strand gene at pos1
+#        b = {} # forward strand gene at pos2
+#        d = {} # backward strand gene at pos2
         if self.strand1 == "+" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(a, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, c, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(b, c, gene_ann, False)
-            #gene_order += self.__check_gene_pairs(a, b, gene_ann, False)
         elif self.strand1 == "+" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(a, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, c, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(d, c, gene_ann, False)
-            #gene_order += self.__check_gene_pairs(a, d, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, a, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(b, a, gene_ann, False)
-            #gene_order += self.__check_gene_pairs(c, b, gene_ann, False)
         elif self.strand1 == "-" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
-            #gene_order += self.__check_gene_pairs(d, a, gene_ann, False)
-            #gene_order += self.__check_gene_pairs(c, d, gene_ann, False)
 
     # realign breakpoints of this fusion to the left most, not finished, how to define "left" when genes are on different chrs 
     def left_aln_fusion_bp(self, refs):
