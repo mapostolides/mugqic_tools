@@ -33,14 +33,17 @@ for line in open(args.cff_file, "r"):
 	#print fusion.tostring()
 
 	#fusion.check_codon(gene_ann, ref_fa)
-	head_seqs = pygeneann.build_transcript_and_fusion_seq(gene_ann, fusion.reann_gene1, ref, fusion.pos1, "head")
+	head_seqs = pygeneann.build_transcript_and_fusion_seq(gene_ann, fusion, ref, fusion.pos1, "head")
         #print(set(head_seqs))
         #continue
-	tail_seqs = pygeneann.build_transcript_and_fusion_seq(gene_ann, fusion.reann_gene2, ref, fusion.pos2, "tail")
+	tail_seqs = pygeneann.build_transcript_and_fusion_seq(gene_ann, fusion, ref, fusion.pos2, "tail")
+        #print(ref)
+        #exit(0)
 	if not head_seqs or not tail_seqs:
 		continue
 	# build head gene transcript ref
 	trans_seqs = set([(t[0], t[1]) for t in head_seqs])
+	#trans_seqs = set([(t[0], t[1]) for t in tail_seqs])
 	ref_id = 0
 	for trans_seq1, trans_seq2 in trans_seqs:
 		#print "TR:", trans_seq1, trans_seq2
@@ -62,6 +65,7 @@ for line in open(args.cff_file, "r"):
 		for fusion_seq2 in fusion_seqs2:
 			ref_id += 1
 			fusion_seq = fusion_seq1 + fusion_seq2
+                        #print(fusion_seq)
 			#print "FU:", fusion_seq1, fusion_seq2
 			bp_pos = len(fusion_seq1)
 			print ">" + gene1 + "_" + gene2 + "_FUSION_" + fusion_id + "_" + str(ref_id) + "_" + str(bp_pos)

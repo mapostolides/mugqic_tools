@@ -45,7 +45,7 @@ class CategoryFusions():
         if len(tmp) > 15:
             # add 4 new columns for purposes of validation of chromosomal positions with reference to validated fusions
             self.chr1 = tmp[15]
-            #setting breakpoint to first value in list of breakpoints. Undecided about how to handle the multiple reported breakpoints by different tools
+            #setting breakpoint lists 
             self.breakpoint_1 = [int(num) for num in tmp[16].split(',')]
             self.chr2 = tmp[17]
             self.breakpoint_2 = [int(num) for num in tmp[18].split(',')]
@@ -54,23 +54,27 @@ class CategoryFusions():
         # attributes to accrue list of gene names in bed feature file that intersect with breakpoints 
         self.left = []
         self.right = []
-        try:
-            self.gene1_candidates = tmp[19] 
-        except IndexError:
-            self.gene1_candidates = ""
-        try:
-            self.gene2_candidates = tmp[20]
-        except IndexError:
-            self.gene2_candidates = ""
-        try:
-            # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
-            self.gene1_strands = tmp[21]
-        except IndexError:
-            self.gene1_strands = ""
-        try:
-            self.gene2_strands = tmp[22]
-        except IndexError:
-            self.gene2_strands = "" 
+        
+        self.captured_reads_tumor_mean = tmp[19] 
+        self.captured_reads_normal_mean = tmp[20]
+        self.fusion_IDs = tmp[21].split(',')
+       # try:
+       #     self.gene1_candidates = tmp[19] 
+       # except IndexError:
+       #     self.gene1_candidates = ""
+       # try:
+       #     self.gene2_candidates = tmp[20]
+       # except IndexError:
+       #     self.gene2_candidates = ""
+       # try:
+       #     # GENE STRANDS REPRESENT CANDIDATE STRANDS QUERIED FROM GENE ANNOTATION FILE
+       #     self.gene1_strands = tmp[21]
+       # except IndexError:
+       #     self.gene1_strands = ""
+       # try:
+       #     self.gene2_strands = tmp[22]
+       # except IndexError:
+       #     self.gene2_strands = "" 
 
     def out(self):
         print self.line
@@ -265,6 +269,21 @@ class CffFusionStats():
             max_split_cnt = max([f.split_cnt for f in fusion_list])
             max_span_cnt = max([f.span_cnt for f in fusion_list])
             sample_list = [f.sample_name for f in fusion_list]  
+
+            # get fusion.captured_reads averages for T and N
+            captured_reads_tumor = [f.captured_reads for f in fusion_list if f.sample_type == "Tumor"] 
+            try:
+                captured_reads_tumor_mean = sum(captured_reads_tumor)/float(len(captured_reads_tumor))
+            except ZeroDivisionError:
+                captured_reads_tumor_mean = -1
+            captured_reads_normal = [f.captured_reads for f in fusion_list if f.sample_type == "Normal"] 
+            try:
+                captured_reads_normal_mean = sum(captured_reads_normal)/float(len(captured_reads_normal))
+            except ZeroDivisionError:
+                captured_reads_normal_mean = -1
+
+            # list of Fusion IDs
+            fusion_IDs = [f.fusion_id for f in fusion_list] 
             disease_list = [f.disease for f in fusion_list] 
             tool_list = [f.tool for f in fusion_list]   
             sample_type_list = [f.sample_type for f in fusion_list] 
@@ -283,7 +302,7 @@ class CffFusionStats():
             chr2_list = [str(f.chr2) for f in fusion_list]
             breakpoint_2_list = [str(f.pos2) for f in fusion_list]
             # print statement modified to include the 4 above new fields
-            print "\t".join(map(str, [cluster_type, ",".join(list(set(gene1_list))), ",".join(list(set(gene2_list))), max_split_cnt, max_span_cnt, ",".join(list(set(sample_type_list))), ",".join(list(set(disease_list))), ",".join(list(set(tool_list))), ",".join(list(set(category_list))), gene1_on_bndry, gene1_close_to_bndry, gene2_on_bndry, gene2_close_to_bndry, dna_supp_cluster_num, ",".join(list(set(sample_list))), ",".join(list(set(chr1_list))), ",".join(list(set(breakpoint_1_list))), ",".join(list(set(chr2_list))), ",".join(list(set(breakpoint_2_list)))]))
+            print "\t".join(map(str, [cluster_type, ",".join(list(set(gene1_list))), ",".join(list(set(gene2_list))), max_split_cnt, max_span_cnt, ",".join(list(set(sample_type_list))), ",".join(list(set(disease_list))), ",".join(list(set(tool_list))), ",".join(list(set(category_list))), gene1_on_bndry, gene1_close_to_bndry, gene2_on_bndry, gene2_close_to_bndry, dna_supp_cluster_num, ",".join(list(set(sample_list))), ",".join(list(set(chr1_list))), ",".join(list(set(breakpoint_1_list))), ",".join(list(set(chr2_list))), ",".join(list(set(breakpoint_2_list))), captured_reads_tumor_mean, captured_reads_normal_mean,",".join(list(set(fusion_IDs)))]))
 
 
     # cluster fusions of "NoDriverGene" and "Truncated" type on their breakpoints
@@ -465,6 +484,7 @@ class CffFusion():
             self.is_inframe = False
             self.splice_site1 = "NA"
             self.splice_site2 = "NA"
+            self.captured_reads = int(tmp[36]) 
         else:
             self.category = "NA"    # category
             self.reann_gene1 = "NA"
@@ -484,6 +504,7 @@ class CffFusion():
             self.is_inframe = False
             self.splice_site1 = "NA"
             self.splice_site2 = "NA"
+            self.captured_reads = -1
             if len(tmp) == 30:
                 self.dnasupp = tmp[29]
             else:
@@ -644,7 +665,7 @@ class CffFusion():
                 value.append(self.__dict__[attr])
         self.boundary_info = "\t".join(map(str, [self.gene1_on_bndry, self.gene1_close_to_bndry, self.gene2_on_bndry, self.gene2_close_to_bndry]))
         
-        return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2
+        return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2 + "\t" + str(self.captured_reads)
     
     def __check_boundary(self, bpann, order): # bpann is GeneBed object, order = head/tail
         # set on boundary info, used boundaries according to head/tail gene and their strand
@@ -1974,7 +1995,7 @@ def fetch_noncoding_seqs(gene_ann, cff_fusion, ref, bp, gene_order):
         #generate rev seqs
         rev_fusion_seq = sequtils.rc_seq(left_seq, "rc") #+"tail_rev"
         trans_seq1, trans_seq2 = sequtils.rc_seq(right_seq, "rc"), sequtils.rc_seq(left_seq, "rc")
-        print(trans_seq1, trans_seq2)
+        #print(trans_seq1, trans_seq2)
         #exit(0)
         seqs.append((trans_seq1, trans_seq2, rev_fusion_seq))
     return seqs 

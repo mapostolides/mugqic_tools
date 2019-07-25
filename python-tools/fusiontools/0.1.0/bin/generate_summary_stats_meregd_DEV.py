@@ -10,21 +10,25 @@ parser.add_argument('sum_file', action='store', help='SUMMARY file of fusion rea
 args = parser.parse_args()
 
 # SUMMARY GTEX-N7MS-0225-SM-4E3HO Normal DPYD DTD2 NT 0 10 0 20
-
+# SUMMARY SJHGG081_D DIPG ARID4B NR5A2 TP 19 19 47 20 55 F00016268
 fusion_stat_dict = {}
 read_cnt_thresh = 3
 fusion_fraction_thresh = 0.1
 for line in open(args.sum_file, "r"):
 	tmp = line.split()
+        print(tmp[0])
 	sample = tmp[1]
 	disease = tmp[2]
 	gene1 = tmp[3]
 	gene2 = tmp[4]
 	sample_type = tmp[5]
-	fusion_cnt = int(tmp[6])
-	trans_cnt = int(tmp[7])
+        sum_mpos = int(tmp[6])
+	fusion_cnt = int(tmp[7])
+	trans_cnt = int(tmp[8])
+        fusion_id = tmp[11]
+        
 
-	key = (gene1, gene2, disease)
+	key = (gene1, gene2, disease, fusion_id)
 
 	fusion_stat_dict.setdefault(key, []).append((sample_type, fusion_cnt, trans_cnt))
 #print "#FUSION\tTUMOR_CNT\tNORMAL_CNT"

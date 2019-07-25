@@ -10,7 +10,8 @@ import argparse
 parser = argparse.ArgumentParser()
 
 parser.add_argument('captured_bam_file', action='store', help='BAM file which contains reads mapped to fusion capture reference')
-parser.add_argument('star_bam_file', action='store', help='realigned.bam, BAM file of STAR realignment (not sure why "STAR" is stated here, it is realigned using bwa mem')
+# NOTE: "star_bam_file" is NOT aligned using star. It is using BWA mem
+parser.add_argument('star_bam_file', action='store', help='BAM file of STAR realignment')
 parser.add_argument('original_cram_file', action='store', help='Original CRAM file name')
 parser.add_argument('sample_info_file', action='store', help='Sample infomation file')
 
@@ -77,15 +78,9 @@ captured_bam = pysam.AlignmentFile(args.captured_bam_file, "rb")
 star_aln_dict = {}
 for read in star_bam.fetch(until_eof=True):
 	star_aln_dict.setdefault(read.query_name, []).append(read)
-        #print(read.query_name)
 fusion_read_cnt_dict = {}
 counted_read_dict = {} # captured reads can only be used once
-for refname in star_bam.references:
-    print(refname)
-
-exit(0)
 for refname in captured_bam.references:
-        print(refname)
 	#if refname != "ZNF43_MIR3916_F00000022_100":
 	#if not "ITGB1" in refname:
 	#	continue
@@ -97,12 +92,13 @@ for refname in captured_bam.references:
 	gene1 = tmp[0]
 	gene2 = tmp[1]
 	ref_type = tmp[2]
+        fusion_id = tmp[3]
 	bp = int(tmp[5])- 1
 	outseqs = []
 	mpos_set = set([]) # save different mapping positions, only for gene fusions
 
 
-	#print "------------------------------------------------------------------------------------------------------------"
+	print "------------------------------------------------------------------------------------------------------------"
 	n_fusion = 0 # filtered fusion read cnt
 	n_trans = 0 # filtered transcript read cnt
 	n_fusion_captured = 0 # all captured fusion read cnt
@@ -159,17 +155,16 @@ for refname in captured_bam.references:
 				n_trans += 1
 		
 	#print "SUMMARY", sample, gene1, gene2, sample_type, "DIPG", len(fusion_reads_dict), len(captured_reads_dict)
-	#print "INFO", ref_type, sample, gene1, gene2, sample_type, disease, len(mpos_set), n_fusion, n_trans, n_fusion_captured, n_trans_captured
+	print "INFO", ref_type, sample, gene1, gene2, sample_type, disease, len(mpos_set), n_fusion, n_trans, n_fusion_captured, n_trans_captured
 
-	key = gene1 + "_" + gene2
+	#key = gene1 + "_" + gene2
+	key = gene1 + "_" + gene2 + "_" + fusion_id 
 	fusion_read_cnt_dict.setdefault(key, []).append((n_fusion, n_trans, n_fusion_captured, n_trans_captured, len(mpos_set)))
 
 	for space_len, seq, read_name in sorted(outseqs, key=lambda x:x[0]):
-                continue
 		print seq, read_name
-exit(0)
 for key in fusion_read_cnt_dict:
-	gene1, gene2 = key.split("_")
+	gene1, gene2, fusion_id = key.split("_")
 	cnts = fusion_read_cnt_dict[key]
 	sum_fusion =  sum([x[0] for x in cnts])
 	sum_trans =  sum([x[1] for x in cnts])
@@ -177,7 +172,7 @@ for key in fusion_read_cnt_dict:
 	sum_trans_captured = sum([x[3] for x in cnts])
 	sum_mpos = sum([x[4] for x in cnts])
 
-	print "SUMMARY", sample, disease, gene1, gene2, sample_type, sum_mpos, sum_fusion, sum_trans, sum_fusion_captured, sum_trans_captured
+	print "SUMMARY", sample, disease, gene1, gene2, sample_type, sum_mpos, sum_fusion, sum_trans, sum_fusion_captured, sum_trans_captured, fusion_id 
 	
 star_bam.close()
 captured_bam.close()
