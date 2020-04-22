@@ -246,7 +246,8 @@ class CffFusionStats():
                 #flip all fusions not ordered the same way as reference:
                 for fusion in fusion_list:
                     fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
-                    if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000):
+                    # check both breakpoint distance AND gene names
+                    if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000) and not (ref_fus.reann_gene1 == fusion.reann_gene1):
                         #flip fusion:
                         fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
                         fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
@@ -295,6 +296,17 @@ class CffFusionStats():
             dna_supp_cluster_num = max([int(f.dnasupp) for f in fusion_list])
             
             category_list = [f.category for f in fusion_list]   
+            # PRIORITIZE CATEGORIES TO REMOVE MULTIPLE CATEGORIES
+            if "ReadThrough" in category_list:
+                category_list = ["ReadThrough"]
+            elif "CodingFusion" in category_list:
+                category_list = ["CodingFusion"]
+            elif "TruncatedCoding" in category_list:
+                category_list = ["TruncatedCoding"]
+            elif "TruncatedNoncoding" in category_list:
+                category_list = ["TruncatedNoncoding"]
+            elif "NoDriverGene" in category_list:
+                category_list = ["NoDriverGene"]
             
             # added 4 new fields to final .cluster file for purposes of validation 
             chr1_list = [str(f.chr1) for f in fusion_list]
@@ -880,11 +892,11 @@ class CffFusion():
         d = {} # backward strand gene at pos2
 
         #swap star_fusion RHS strand to correspond to defuse:
-        #if self.tool!="defuse":
-        #    if self.strand2 == "-":
-        #        self.strand2 = "+"
-        #    elif self.strand2 == "+":
-        #        self.strand2 = "-"
+        if self.tool!="defuse":
+            if self.strand2 == "-":
+                self.strand2 = "+"
+            elif self.strand2 == "+":
+                self.strand2 = "-"
 
         for gene in matched_genes1:
             if gene.strand == "f":
