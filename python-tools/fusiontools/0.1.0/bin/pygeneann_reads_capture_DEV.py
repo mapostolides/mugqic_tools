@@ -245,6 +245,10 @@ class CffFusionStats():
                 ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
                 #flip all fusions not ordered the same way as reference:
                 for fusion in fusion_list:
+                    #TEST: remove reannotated gene name
+                    fusion.reann_gene1 = fusion.t_gene1
+                    fusion.reann_gene2 = fusion.t_gene2
+
                     fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
                     # check both breakpoint distance AND gene names
                     if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000) and not (ref_fus.reann_gene1 == fusion.reann_gene1):
@@ -364,7 +368,7 @@ class CffFusionStats():
             if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
-                key = (fusion.reann_gene1, fusion.reann_gene2)  
+                key = (fusion.reann_gene1 + "|" + fusion.chr1, fusion.reann_gene2+ "|" + fusion.chr2)  
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:

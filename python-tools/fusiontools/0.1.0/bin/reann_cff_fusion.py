@@ -2,7 +2,8 @@
 import sys
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/DIPG_analysis_by_samples/Scripts/pygeneann/pygenefusionann")
 #sys.path.append("/hpf/largeprojects/ccmbio/jiangyue/Genap_ccm/pygenefusionann/")
-import pygeneann_OLD_star_fusion_defuse_style as pygeneann
+#import pygeneann_OLD_star_fusion_defuse_style as pygeneann
+import  pygeneann_reads_capture_DEV as pygeneann
 #import pygeneann_STEPH as pygeneann
 import sequtils
 import pysam

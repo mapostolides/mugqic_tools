@@ -23,6 +23,29 @@ class FusionResult():
             self.strand2 = tmp[idx_strand2].split(":")[2]
             self.gene1 = tmp[idx_gene1].split("--")[0]
             self.gene2 = tmp[idx_gene2].split("--")[1]
+            self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
+        elif self.tool == "STAR-SEQR":#chr10:124152694:-
+            # need to remove "chr" prefix 
+            self.chr1 = tmp[idx_chr1].split(":")[0][3:]
+            self.pos1 =  tmp[idx_pos1].split(":")[1]
+            self.strand1 = tmp[idx_strand1].split(":")[2]
+            self.chr2 = tmp[idx_chr2].split(":")[0][3:]
+            self.pos2 = tmp[idx_pos2].split(":")[1]
+            self.strand2 = tmp[idx_strand2].split(":")[2]
+            self.gene1 = tmp[idx_gene1]
+            self.gene2 = tmp[idx_gene2]
+            # left and right paired reads separate, take minimum value
+            self.pair_cnt = min(tmp[idx_pair_cnt], tmp[idx_pair_cnt+1]) 
+        elif self.tool == "arriba":
+            self.chr1 = tmp[idx_chr1].split(":")[0]
+            self.pos1 =  tmp[idx_pos1].split(":")[1]
+            self.strand1 = tmp[idx_strand1].split("/")[0]
+            self.chr2 = tmp[idx_chr2].split(":")[0]
+            self.pos2 = tmp[idx_pos2].split(":")[1]
+            self.strand2 = tmp[idx_strand2].split("/")[0]
+            self.gene1 = tmp[idx_gene1]
+            self.gene2 = tmp[idx_gene2]
+            self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
  
         else:
             self.chr1 = tmp[idx_chr1]
@@ -33,19 +56,52 @@ class FusionResult():
             self.strand2 = tmp[idx_strand2] if idx_strand2 != "NA" else "NA"
             self.gene1 = tmp[idx_gene1]
             self.gene2 = tmp[idx_gene2]
+            self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
 
         #FIELDS COMMON TO ALL FUSION CALLERS
         self.gene_location1 = tmp[idx_gene_location1] if idx_gene_location1 != "NA" else "NA"
         self.gene_location2 = tmp[idx_gene_location2] if idx_gene_location2 != "NA" else "NA"
         self.split_cnt = tmp[idx_split_cnt] if idx_split_cnt != "NA" else -1
-        self.pair_cnt = tmp[idx_pair_cnt] if idx_pair_cnt != "NA" else -1
      
 class FusionResultFile():
     def __init__(self, result_file):
         self.fusion_results = []
         for line in open(result_file, "r"):
             tmp = line.split()
-            if tmp[0] == "#FusionName": ## STAR-Fusion header
+            #NAME	NREAD_SPANS	NREAD_JXNLEFT	NREAD_JXNRIGHT	FUSION_CLASS	SPLICE_TYPE	BRKPT_LEFT	BRKPT_RIGHT	LEFT_SYMBOL	RIGHT_SYMBOL	ANNOT_FORMAT	LEFT_ANNOT	RIGHT_ANNOT	DISTANCE	ASSEMBLED_CONTIGS	ASSEMBLY_CROSS_JXN	PRIMERS	ID	SPAN_CROSSHOM_SCORE	JXN_CROSSHOM_SCORE	OVERHANG_DIVERSITY	MINFRAG20	MINFRAG35	OVERHANG_MEANBQ	SPAN_MEANBQ	JXN_MEANBQ	OVERHANG_BQ15	SPAN_BQ15	JXN_BQ15	OVERHANG_MM	SPAN_MM	JXN_MM	OVERHANG_MEANLEN	SPAN_MEANLEN	JXN_MEANLEN	TPM_FUSION	TPM_LEFT	TPM_RIGHT	MAX_TRX_FUSION	DISPOSITION
+            if tmp[0] == "NAME": ## STAR-SEQR header 
+                self.tool = "STAR-SEQR"
+                self._idx_chr1 = tmp.index("BRKPT_LEFT")
+                self._idx_chr2 = tmp.index("BRKPT_RIGHT")
+                self._idx_pos1 = tmp.index("BRKPT_LEFT")
+                self._idx_pos2 = tmp.index("BRKPT_RIGHT")
+                self._idx_strand1 = tmp.index("BRKPT_LEFT")
+                self._idx_strand2 = tmp.index("BRKPT_RIGHT")
+                self._idx_split_cnt = tmp.index("NREAD_SPANS")
+                self._idx_pair_cnt = tmp.index("NREAD_JXNLEFT")
+                self._idx_gene1= tmp.index("LEFT_SYMBOL")
+                self._idx_gene2 = tmp.index("RIGHT_SYMBOL")
+                self._idx_gene_location1 = "NA"
+                self._idx_gene_location2 = "NA"        
+
+            ##gene1  gene2   strand1(gene/fusion)    strand2(gene/fusion)    breakpoint1     breakpoint2     site1   site2 type     direction1      direction2      split_reads1    split_reads2    discordant_mates        coverage1     coverage2        confidence      closest_genomic_breakpoint1     closest_genomic_breakpoint2     filters fusion_transcript      reading_frame   peptide_sequence        read_identifiers
+            elif tmp[0] == "#gene1": ## arriba header 
+                self.tool = "arriba"
+                self._idx_chr1 = tmp.index("breakpoint1")
+                self._idx_chr2 = tmp.index("breakpoint2")
+                self._idx_pos1 = tmp.index("breakpoint1")
+                self._idx_pos2 = tmp.index("breakpoint2")
+                self._idx_strand1 = tmp.index("strand1(gene/fusion)")
+                self._idx_strand2 = tmp.index("strand2(gene/fusion)")
+                self._idx_split_cnt = tmp.index("split_reads1")
+                self._idx_pair_cnt = tmp.index("discordant_mates")
+                self._idx_gene1= tmp.index("#gene1")
+                self._idx_gene2 = tmp.index("gene2")
+                self._idx_gene_location1 = "NA"
+                self._idx_gene_location2 = "NA"        
+                
+
+            elif tmp[0] == "#FusionName": ## STAR-Fusion header
                 self.tool = "STAR-Fusion"
                 self._idx_chr1 = tmp.index("LeftBreakpoint")
                 self._idx_chr2 = tmp.index("RightBreakpoint")
