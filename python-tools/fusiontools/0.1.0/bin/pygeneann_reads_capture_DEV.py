@@ -881,7 +881,16 @@ class CffFusion():
         # get genes which correspond to 5' and 3' breakpoints (i.e. pos1 and pos2, respectively)
         # return a list of GeneBed objects corresponding to intersecting genes 
         matched_genes1 = gene_ann.map_pos_to_genes(self.chr1, self.pos1)
+        try: 
+            idx=[gene.gene_name for gene in matched_genes1].index(self.t_gene1)
+            matched_genes1=[matched_genes1[idx]]
+        except ValueError: pass 
         matched_genes2 = gene_ann.map_pos_to_genes(self.chr2, self.pos2)
+        try: 
+            idx=[gene.gene_name for gene in matched_genes2].index(self.t_gene2)
+            matched_genes2=[matched_genes2[idx]]
+        except ValueError: pass 
+        #if self.t_gene2 in [gene.gene_name for gene in matched_genes2]: matched_genes2=self.t_gene2
 
         #TEST ...
         #instance_vars = ['chr', 'start', 'end', 'transcript_id', 'type', 'idx', 'strand', 'gene_name', 'gene_id', 'is_from_contradictory_gene']
@@ -896,17 +905,20 @@ class CffFusion():
         d = {} # backward strand gene at pos2
 
         #swap star_fusion RHS strand to correspond to defuse:
-        if self.tool!="defuse":
+        #if self.tool!="defuse":
+        if self.tool=="defuse":
             if self.strand2 == "-":
                 self.strand2 = "+"
             elif self.strand2 == "+":
                 self.strand2 = "-"
-
+        #print([(gene.gene_name, gene.strand) for gene in matched_genes1])
+        #print([gene.gene_name for gene in matched_genes1])
         for gene in matched_genes1:
             if gene.strand == "f":
                 a.setdefault(gene.gene_name, []).append(gene)
             else:
                 c.setdefault(gene.gene_name, []).append(gene)
+        #print([gene.gene_name for gene in matched_genes2])
         for gene in matched_genes2:
             if gene.strand == "f":
                 b.setdefault(gene.gene_name, []).append(gene)
@@ -940,9 +952,11 @@ class CffFusion():
                 else:
                     self.strand1 = "-"
                 if gene_interval2.strand == "f":
-                    self.strand2 = "-"
-                else:
+                    #self.strand2 = "-"
                     self.strand2 = "+"
+                else:
+                    #self.strand2 = "+"
+                    self.strand2 = "-"
             else:
                 # failed to fill in strand, return list with warnning info
                 #gene_order.append("Strand_filling_failed")
@@ -956,16 +970,20 @@ class CffFusion():
 #        c = {} # backward strand gene at pos1
 #        b = {} # forward strand gene at pos2
 #        d = {} # backward strand gene at pos2
-        if self.strand1 == "+" and self.strand2 == "+":
+        #if self.strand1 == "+" and self.strand2 == "+":
+        if self.strand1 == "+" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(a, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, c, gene_ann, True)
-        elif self.strand1 == "+" and self.strand2 == "-":
+        #elif self.strand1 == "+" and self.strand2 == "-":
+        elif self.strand1 == "+" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(a, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, c, gene_ann, True)
-        elif self.strand1 == "-" and self.strand2 == "+":
+        #elif self.strand1 == "-" and self.strand2 == "+":
+        elif self.strand1 == "-" and self.strand2 == "-":
             gene_order = self.__check_gene_pairs(c, d, gene_ann, False)
             gene_order += self.__check_gene_pairs(b, a, gene_ann, True)
-        elif self.strand1 == "-" and self.strand2 == "-":
+        #elif self.strand1 == "-" and self.strand2 == "-":
+        elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
 
