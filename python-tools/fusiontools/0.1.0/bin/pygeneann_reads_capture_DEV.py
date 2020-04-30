@@ -801,13 +801,20 @@ class CffFusion():
         for gname1 in genes1:
             for bpann1 in genes1[gname1]:
                 score1, is_on_boundary1, close_to_boundary1 = self.__cal_score(bpann1, "head")  
+                if score1 == max_t2[0] and gname1==self.t_gene1:
+                    max_t1 = score1, is_on_boundary1, close_to_boundary1, bpann1
                 if score1 > max_t1[0]:
                     max_t1 = score1, is_on_boundary1, close_to_boundary1, bpann1
         for gname2 in genes2:
             for bpann2 in genes2[gname2]:
                 score2, is_on_boundary2, close_to_boundary2 = self.__cal_score(bpann2, "tail")  
-                if score2 > max_t2[0]:
+                if score2 == max_t2[0] and gname2==self.t_gene2:
                     max_t2 = score2, is_on_boundary2, close_to_boundary2, bpann2
+                elif score2 > max_t2[0]:
+                    max_t2 = score2, is_on_boundary2, close_to_boundary2, bpann2
+        #print >> sys.stderr, self.bpann2.gene_name
+        #print >> sys.stderr, (max_t1[0], max_t2[0] )
+        #print >> sys.stderr, self.t_gene2 
         if max_t1[0] + max_t2[0] > self.score1 + self.score2:
             self.score1, self.gene1_on_bndry, self.gene1_close_to_bndry, self.bpann1 = max_t1
             self.score2, self.gene2_on_bndry, self.gene2_close_to_bndry, self.bpann2 = max_t2
@@ -832,12 +839,12 @@ class CffFusion():
                     self.gene_interval_distance = max(gene_interval1.start, gene_interval2.start) - min(gene_interval1.end, gene_interval2.end)
 
             #switch pos order if necessary
-            if switch_pos:
-                self.chr1, self.chr2 = self.chr2, self.chr1
-                self.pos1, self.pos2 = self.pos2, self.pos1
-                self.strand1, self.strand2 = self.strand2, self.strand1
-                self.t_gene1, self.t_gene2 = self.t_gene2, self.t_gene1
-                self.t_area1, self.t_area2 = self.t_area2, self.t_area1
+            #if switch_pos:
+            #    self.chr1, self.chr2 = self.chr2, self.chr1
+            #    self.pos1, self.pos2 = self.pos2, self.pos1
+            #    self.strand1, self.strand2 = self.strand2, self.strand1
+            #    self.t_gene1, self.t_gene2 = self.t_gene2, self.t_gene1
+            #    self.t_area1, self.t_area2 = self.t_area2, self.t_area1
 
             ## assign fusion to a category according to best score gene pair
             # No driver gene
@@ -881,15 +888,15 @@ class CffFusion():
         # get genes which correspond to 5' and 3' breakpoints (i.e. pos1 and pos2, respectively)
         # return a list of GeneBed objects corresponding to intersecting genes 
         matched_genes1 = gene_ann.map_pos_to_genes(self.chr1, self.pos1)
-        try: 
-            idx=[gene.gene_name for gene in matched_genes1].index(self.t_gene1)
-            matched_genes1=[matched_genes1[idx]]
-        except ValueError: pass 
+        #try: 
+        #    idx=[gene.gene_name for gene in matched_genes1].index(self.t_gene1)
+        #    matched_genes1=[matched_genes1[idx]]
+        #except ValueError: pass 
         matched_genes2 = gene_ann.map_pos_to_genes(self.chr2, self.pos2)
-        try: 
-            idx=[gene.gene_name for gene in matched_genes2].index(self.t_gene2)
-            matched_genes2=[matched_genes2[idx]]
-        except ValueError: pass 
+        #try: 
+        #    idx=[gene.gene_name for gene in matched_genes2].index(self.t_gene2)
+        #    matched_genes2=[matched_genes2[idx]]
+        #except ValueError: pass 
         #if self.t_gene2 in [gene.gene_name for gene in matched_genes2]: matched_genes2=self.t_gene2
 
         #TEST ...
