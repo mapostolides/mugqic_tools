@@ -680,9 +680,9 @@ class CffFusion():
             else:
                 value.append(self.__dict__[attr])
         self.boundary_info = "\t".join(map(str, [self.gene1_on_bndry, self.gene1_close_to_bndry, self.gene2_on_bndry, self.gene2_close_to_bndry]))
-        if len(self.line.split()) > 18: 
+        try:
             return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2 + "\t" + str(self.captured_reads)
-        else:
+        except:
             return "\t".join(map(lambda x:str(x), value)) 
     
     def __check_boundary(self, bpann, order): # bpann is GeneBed object, order = head/tail
@@ -840,13 +840,13 @@ class CffFusion():
                 if gene_interval1.chr == gene_interval2.chr:
                     self.gene_interval_distance = max(gene_interval1.start, gene_interval2.start) - min(gene_interval1.end, gene_interval2.end)
 
-            #switch pos order if necessary
-            if switch_pos:
-                self.chr1, self.chr2 = self.chr2, self.chr1
-                self.pos1, self.pos2 = self.pos2, self.pos1
-                self.strand1, self.strand2 = self.strand2, self.strand1
-                self.t_gene1, self.t_gene2 = self.t_gene2, self.t_gene1
-                self.t_area1, self.t_area2 = self.t_area2, self.t_area1
+            #switch pos order if necessary #SWAP. Really only matters for defuse, other callers don't get gene order wrong
+            #if switch_pos:
+            #    self.chr1, self.chr2 = self.chr2, self.chr1
+            #    self.pos1, self.pos2 = self.pos2, self.pos1
+            #    self.strand1, self.strand2 = self.strand2, self.strand1
+            #    self.t_gene1, self.t_gene2 = self.t_gene2, self.t_gene1
+            #    self.t_area1, self.t_area2 = self.t_area2, self.t_area1
 
             ## assign fusion to a category according to best score gene pair
             # No driver gene
