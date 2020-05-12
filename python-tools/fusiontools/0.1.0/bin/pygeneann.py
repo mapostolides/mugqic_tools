@@ -465,6 +465,7 @@ class CffFusion():
             self.is_inframe = False
             self.splice_site1 = "NA"
             self.splice_site2 = "NA"
+            self.captured_reads = -1
         else:
             self.category = "NA"    # category
             self.reann_gene1 = "NA"
@@ -484,6 +485,7 @@ class CffFusion():
             self.is_inframe = False
             self.splice_site1 = "NA"
             self.splice_site2 = "NA"
+            self.captured_reads = -1
             if len(tmp) == 30:
                 self.dnasupp = tmp[29]
             else:
@@ -644,7 +646,7 @@ class CffFusion():
                 value.append(self.__dict__[attr])
         self.boundary_info = "\t".join(map(str, [self.gene1_on_bndry, self.gene1_close_to_bndry, self.gene2_on_bndry, self.gene2_close_to_bndry]))
         
-        return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2
+        return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2 + "\t" + str(self.captured_reads)
     
     def __check_boundary(self, bpann, order): # bpann is GeneBed object, order = head/tail
         # set on boundary info, used boundaries according to head/tail gene and their strand

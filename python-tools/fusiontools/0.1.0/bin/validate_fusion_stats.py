@@ -5,7 +5,7 @@ import argparse
 from pygeneann import *
 import os
 import sqlite3
-from validation_classes import *
+#from validation_classes import *
 import itertools
 
 #import numpy as np
