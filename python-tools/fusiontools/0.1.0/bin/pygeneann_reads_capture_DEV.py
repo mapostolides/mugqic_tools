@@ -680,9 +680,9 @@ class CffFusion():
             else:
                 value.append(self.__dict__[attr])
         self.boundary_info = "\t".join(map(str, [self.gene1_on_bndry, self.gene1_close_to_bndry, self.gene2_on_bndry, self.gene2_close_to_bndry]))
-        try:
+        if self.fusion_id != "NA":
             return "\t".join(map(lambda x:str(x), value)) + "\t" + self.category + "\t" + self.reann_gene1 + "\t" + self.reann_type1 + "\t" + self.reann_gene2 + "\t" + self.reann_type2 + "\t" + self.boundary_info + "\t" + str(self.score) + "\t" + str(self.coding_id_distance) + "\t" + str(self.gene_interval_distance) + "\t" + str(self.dnasupp) + "\t" + self.fusion_id + "\t" + self.seq1 + "\t" + self.seq2 + "\t" + str(self.is_inframe) + "\t" + self.splice_site1 + "\t" + self.splice_site2 + "\t" + str(self.captured_reads)
-        except:
+        else:
             return "\t".join(map(lambda x:str(x), value)) 
     
     def __check_boundary(self, bpann, order): # bpann is GeneBed object, order = head/tail

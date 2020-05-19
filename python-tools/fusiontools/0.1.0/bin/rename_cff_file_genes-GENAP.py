@@ -36,6 +36,14 @@ df = pd.concat([pd.Series(row['Symbol'], row['Synonyms'].split('|'))
 	for _, row in df.iterrows()]).reset_index()
 df.rename(columns = {list(df)[0]: 'Alias', list(df)[1]: 'HGNC_Symbol'}, inplace = True)
 
+def clean_weird_input(gene_name): 
+    #$ cat $cluster | sed 's/(.\+)//g' | sed 's/\//,/g' 
+    # remove arriba brackets, e.g. RNU6-121P(14818),AQP10(8524)
+    gene_name = re.sub('\([0-9]+\)', '', gene_name) 
+    # remove integrate slash-delimited paralogs
+    gene_name = re.sub('/', ',', gene_name) 
+    return gene_name 
+
 def alias2hgnc(df, query):
     #check to see if query is already HGNC symbol
     hgnc = df.loc[df.HGNC_Symbol == query].HGNC_Symbol.values.tolist()
@@ -45,14 +53,6 @@ def alias2hgnc(df, query):
     else:
         hgnc_lst = df.loc[df.Alias == query].HGNC_Symbol.values.tolist()
         return "NA" if len(hgnc_lst) == 0 else hgnc_lst[0]
-
-def clean_weird_input(gene_name): 
-    #$ cat $cluster | sed 's/(.\+)//g' | sed 's/\//,/g' 
-    # remove arriba brackets, e.g. RNU6-121P(14818),AQP10(8524)
-    gene_name = re.sub('\([0-9]+\)', '', gene_name) 
-    # remove integrate slash-delimited paralogs
-    gene_name = re.sub('/', ',', gene_name) 
-    return gene_name 
 
 def select_gene_name(gene_lst):
     """takes a list of gene names and selects a single name"""
