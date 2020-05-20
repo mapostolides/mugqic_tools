@@ -28,7 +28,7 @@ gene_info_file=args.gene_info_file
 #Open NCBI file and create df
 #ncbi_gene_info_file = open("/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/pipeline/config_reference_files/Homo_sapiens.gene_info") 
 ncbi_gene_info_file = open(gene_info_file)
-df = pd.read_csv(ncbi_gene_info_file, sep='\t')
+df = pd.read_csv(ncbi_gene_info_file, sep='\t', header=False)
 
 #https://stackoverflow.com/questions/26336251/pandas-rename-single-dataframe-column-without-knowing-column-name
 #Create one row for each alias
