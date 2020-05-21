@@ -7,6 +7,7 @@ import time
 import sequtils
 import copy
 import re
+import pybedtools.bedtool
 
 
 # fusions are clusted by gene pairs
@@ -242,31 +243,34 @@ class CffFusionStats():
             #use first fusion in fusion as reference fusion to account for flipped fusions for BP_Cluster
             if use_reference_fusion:
                 ref_fus = fusion_list[0]
-                ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
+                #ref_fus_bp1 = (ref_fus.chr1, ref_fus.pos1, ref_fus.strand1)
                 #flip all fusions not ordered the same way as reference:
                 for fusion in fusion_list:
                     #TEST: remove reannotated gene name
-                    fusion.reann_gene1 = fusion.t_gene1
-                    fusion.reann_gene2 = fusion.t_gene2
+                    #fusion.reann_gene1 = fusion.t_gene1
+                    #fusion.reann_gene2 = fusion.t_gene2
 
-                    fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
+                    #fus_bp1 = (fusion.chr1, fusion.pos1, fusion.strand1)
                     # check both breakpoint distance AND gene names
-                    if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000) and not (ref_fus.reann_gene1 == fusion.reann_gene1):
+                    #if not cmp_fusion_breakpoints(ref_fus_bp1, fus_bp1, 100000) and not (ref_fus.reann_gene1 == fusion.reann_gene1):
+                    if not (ref_fus.t_gene1 == fusion.t_gene1):
                         #flip fusion:
                         fusion.chr1, fusion.chr2 = fusion.chr2, fusion.chr1
                         fusion.pos1, fusion.pos2 = fusion.pos2, fusion.pos1
                         fusion.strand1, fusion.strand2 = fusion.strand2, fusion.strand1
-                        #fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
-                        #fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
-                        fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
+                        fusion.t_gene1, fusion.t_gene2 = fusion.t_gene2, fusion.t_gene1
+                        fusion.t_area1, fusion.t_area2 = fusion.t_area2, fusion.t_area1
+                        #fusion.reann_gene1, fusion.reann_gene2 = fusion.reann_gene2, fusion.reann_gene1
                         fusion.reann_type1,fusion.reann_type2 = fusion.reann_type2,fusion.reann_type1
 
             #need to remove NA values from below lists, but only if there are valid gene names in them
-            gene1_list_orig = [f.reann_gene1 for f in fusion_list]
+            #gene1_list_orig = [f.reann_gene1 for f in fusion_list]
+            gene1_list_orig = [f.t_gene1 for f in fusion_list]
             gene1_list = [gene for gene in gene1_list_orig if gene !="NA"]
             if len(gene1_list) < 1:
                 gene1_list = gene1_list_orig
-            gene2_list_orig = [f.reann_gene2 for f in fusion_list]
+            #gene2_list_orig = [f.reann_gene2 for f in fusion_list]
+            gene2_list_orig = [f.t_gene2 for f in fusion_list]
             gene2_list = [gene for gene in gene2_list_orig if gene !="NA"]
             if len(gene2_list) < 1:
                 gene2_list = gene2_list_orig
@@ -365,10 +369,12 @@ class CffFusionStats():
                 continue
             fusion = CffFusion(line)
             # send fusion to breakpoint cluster later
-            if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
+            #if fusion.reann_gene1 == "NA" or fusion.reann_gene2 == "NA":
+            if fusion.t_gene1 == "NA" or fusion.t_gene2 == "NA":
                 fusion_list_for_bp_cmp.append(fusion)
             else:
-                key = (fusion.reann_gene1 + "|" + fusion.chr1, fusion.reann_gene2+ "|" + fusion.chr2)  
+                #key = (fusion.reann_gene1 + "|" + fusion.chr1, fusion.reann_gene2+ "|" + fusion.chr2)  
+                key = ",".join(sorted([fusion.t_gene1 + "|" + fusion.chr1, fusion.t_gene2+ "|" + fusion.chr2, fusion.t_gene2 + "|" + fusion.chr2, fusion.t_gene1+ "|" + fusion.chr1])) 
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:
@@ -535,7 +541,8 @@ class CffFusion():
         self.zone1_attrs = ["chr1", "pos1", "strand1", "chr2", "pos2", "strand2"]
         self.zone2_attrs = ["library", "sample_name", "sample_type", "disease"]
         self.zone3_attrs = ["tool", "split_cnt", "span_cnt", "t_gene1", "t_area1", "t_gene2", "t_area2"]
-        self.zone4_attrs = ["reann_gene_order1", "reann_gene_type1", "reann_gene_index1", "reann_category1", "reann_gene_order2", "reann_gene_type2", "reann_gene_index2", "reann_category2"]
+        self.zone4_attrs = ["category", "reann_gene1", "reann_type1", "reann_gene2", "reann_type2", "gene1_on_bdry", "gene1_close_to_bndry", "gene2_on_bdry", "gene2_close_to_bndry", "score", "coding_id_distance", "gene_interval_distance", "dna_support", "fusion_id", "seq1", "seq2", "is_inframe", "splice_site1", "splice_site2", "captured_reads"]  
+        #self.zone4_attrs = ["reann_gene_order1", "reann_gene_type1", "reann_gene_index1", "reann_category1", "reann_gene_order2", "reann_gene_type2", "reann_gene_index2", "reann_category2"]
         # format chr
         if not self.chr1.startswith("chr"):
             self.chr1 = "chr" + self.chr1
