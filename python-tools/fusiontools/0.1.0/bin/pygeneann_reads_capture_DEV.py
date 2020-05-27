@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+debug=0
 import sys
 import pysam
 import bisect
@@ -7,7 +8,7 @@ import time
 import sequtils
 import copy
 import re
-import pybedtools.bedtool
+#import pybedtools.bedtool
 
 
 # fusions are clusted by gene pairs
@@ -374,7 +375,7 @@ class CffFusionStats():
                 fusion_list_for_bp_cmp.append(fusion)
             else:
                 #key = (fusion.reann_gene1 + "|" + fusion.chr1, fusion.reann_gene2+ "|" + fusion.chr2)  
-                key = ",".join(sorted([fusion.t_gene1 + "|" + fusion.chr1, fusion.t_gene2+ "|" + fusion.chr2, fusion.t_gene2 + "|" + fusion.chr2, fusion.t_gene1+ "|" + fusion.chr1])) 
+                key = ",".join(sorted([fusion.t_gene1 + "|" + fusion.chr1, fusion.t_gene2+ "|" + fusion.chr2])) 
                 fusion_dict.setdefault(key, []).append(fusion)
         # output clustered fusions
         for key in fusion_dict:
@@ -788,6 +789,12 @@ class CffFusion():
         category = ""
         t = 5
                 
+        if debug: 
+            print(set(genes1.keys()), set(genes2.keys()) )
+            print(gene_ann.is_coding('PNMA6A')['PNMA6A'].tostring())
+            #print(.__gene_intervals['PNMA6A'])
+            #print(gene_ann.is_coding([gene_name for gene_name in set(genes2.keys())][0]))
+            #print([gene_name for gene_name in set(genes2.keys())])
         # type of genes, coding gene ids
         for gene_name in set(genes1.keys()):
             if gene_ann.is_coding(gene_name):
@@ -798,10 +805,11 @@ class CffFusion():
         for gene_name in set(genes2.keys()):
             if gene_ann.is_coding(gene_name):
                 type2.append("CodingGene")
+                if debug: print("CodingGene")
                 id2.append(str(gene_ann.get_coding_gene_idx(gene_name)))
             else:
                 type2.append("NoncodingGene")
-
+                if debug: print("NoncodingGene")
         # Calculate score for every gene pair, choose the best
         
         # get best score for current gene combination   
@@ -817,13 +825,18 @@ class CffFusion():
         for gname2 in genes2:
             for bpann2 in genes2[gname2]:
                 score2, is_on_boundary2, close_to_boundary2 = self.__cal_score(bpann2, "tail")  
+                #print(score2, is_on_boundary2, close_to_boundary2)
                 if score2 == max_t2[0] and gname2==self.t_gene2:
                     max_t2 = score2, is_on_boundary2, close_to_boundary2, bpann2
                 elif score2 > max_t2[0]:
                     max_t2 = score2, is_on_boundary2, close_to_boundary2, bpann2
-        #print >> sys.stderr, self.bpann2.gene_name
-        #print >> sys.stderr, (max_t1[0], max_t2[0] )
-        #print >> sys.stderr, self.t_gene2 
+        #if debug:
+        #    print >> sys.stderr, self.bpann1.gene_name
+        #    print >> sys.stderr, (max_t1[0], max_t2[0] )
+        #    print >> sys.stderr, self.t_gene1
+        #    print >> sys.stderr, self.bpann2.gene_name
+        #    print >> sys.stderr, (max_t1[0], max_t2[0] )
+        #    print >> sys.stderr, self.t_gene2 
         if max_t1[0] + max_t2[0] > self.score1 + self.score2:
             self.score1, self.gene1_on_bndry, self.gene1_close_to_bndry, self.bpann1 = max_t1
             self.score2, self.gene2_on_bndry, self.gene2_close_to_bndry, self.bpann2 = max_t2
@@ -865,10 +878,12 @@ class CffFusion():
             else:
                 # category fusions into: read through, gene fusion, truncated coding, truncated noncoding, nonsense
                 gene1_is_coding = gene_ann.is_coding(self.reann_gene1)
+                
                 if genes2:
                     gene2_is_coding = gene_ann.is_coding(self.reann_gene2)
                 else:
                     gene2_is_coding = False
+                if debug: print("gene1_is_coding:", gene1_is_coding, "gene2_is_coding", gene2_is_coding)
                 if gene1_is_coding and gene2_is_coding:
                     for id in id1:
                         tmp = id.split("_")
@@ -897,15 +912,20 @@ class CffFusion():
         # get genes which correspond to 5' and 3' breakpoints (i.e. pos1 and pos2, respectively)
         # return a list of GeneBed objects corresponding to intersecting genes 
         matched_genes1 = gene_ann.map_pos_to_genes(self.chr1, self.pos1)
-        #try: 
-        #    idx=[gene.gene_name for gene in matched_genes1].index(self.t_gene1)
-        #    matched_genes1=[matched_genes1[idx]]
-        #except ValueError: pass 
+        # If t_gene1 (original name assigned by caller) is in matched_genes list, no need to reannotate
+        try: 
+            idx=[gene.gene_name for gene in matched_genes1].index(self.t_gene1)
+            matched_genes1=[matched_genes1[idx]]
+        except ValueError: pass 
+        #print([gene_bed.gene_name for gene_bed in matched_genes1])
         matched_genes2 = gene_ann.map_pos_to_genes(self.chr2, self.pos2)
-        #try: 
-        #    idx=[gene.gene_name for gene in matched_genes2].index(self.t_gene2)
-        #    matched_genes2=[matched_genes2[idx]]
-        #except ValueError: pass 
+        try: 
+            idx=[gene.gene_name for gene in matched_genes2].index(self.t_gene2)
+            matched_genes2=[matched_genes2[idx]]
+        except ValueError: pass 
+        #if debug:
+        #    print([(gene_bed.gene_name, gene_bed.start_orig) for gene_bed in matched_genes1])
+        #    print([(gene_bed.gene_name, gene_bed.start_orig) for gene_bed in matched_genes2])
         #if self.t_gene2 in [gene.gene_name for gene in matched_genes2]: matched_genes2=self.t_gene2
 
         #TEST ...
@@ -1002,6 +1022,9 @@ class CffFusion():
         elif self.strand1 == "-" and self.strand2 == "+":
             gene_order = self.__check_gene_pairs(c, b, gene_ann, False)
             gene_order += self.__check_gene_pairs(d, a, gene_ann, True)
+        #if debug:
+        #    print([gene_bed.gene_name for gene_bed in matched_genes1])
+        #    print([gene_bed.gene_name for gene_bed in matched_genes2])
 
     # realign breakpoints of this fusion to the left most, not finished, how to define "left" when genes are on different chrs 
     def left_aln_fusion_bp(self, refs):
@@ -1382,7 +1405,10 @@ class GeneInterval():
             self.is_coding = True if "cds" in [a.type for a in bed_ann_list] else False
             self.is_contradictory = False
             self.transcript_ids = list(set([genebed.transcript_id for genebed in bed_ann_list]))
-    
+
+    def tostring(self): 
+        return "\t".join([self.gene_name, self.chr, self.strand, str(self.start), str(self.end), str(self.is_coding), str(self.is_contradictory)])
+
     def overlap(self, interval2):
         if self.chr == interval2.chr and min(self.end, interval2.end) - max(self.start, interval2.start) > 0:
             return True
@@ -1422,6 +1448,7 @@ class GeneBed():
             tmp = bed_line.split()
             self.chr = tmp[0]
             self.start = int(tmp[1]) + 1    # bed file use 0-based coordinate
+            self.start_orig = int(tmp[1]) 
             self.end = int(tmp[2])      # start and end are first and last base of each segment
             self.transcript_id = tmp[3]
             self.type = tmp[4] # utr/intron/cds
@@ -1466,7 +1493,7 @@ class GeneBed():
             return new_bed
 
     def tostring(self):
-        attrs = [self.chr, str(self.start), str(self.end), self.transcript_id, self.type, str(self.idx), self.strand, self.gene_name, self.gene_id]
+        attrs = [self.chr, str(self.start_orig), str(self.end), self.transcript_id, self.type, str(self.idx), self.strand, self.gene_name, self.gene_id]
         return "\t".join(attrs)
 
 #Load bed format gene annotation, current support knowngene.bed's format, map given genomic loactions to genens, return matched gene list
@@ -1675,7 +1702,8 @@ class GeneAnnotation():
         for key in self.__gene_name_idx_map:
             print key, self.__gene_name_idx_map[key]
     # whether a gene include coding exon (cds)
-    def is_coding(self, gene_name):
+    def is_coding(self, gene_name): #debug
+        #return self.__gene_intervals[gene_name].is_coding 
         return self.__gene_intervals[gene_name].is_coding 
     # where a gene has contradictory annotations
     def is_contradictory(self, gene_name):
