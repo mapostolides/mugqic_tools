@@ -34,8 +34,8 @@ class FusionResult():
             self.strand2 = tmp[idx_strand2].split(":")[2]
             self.gene1 = tmp[idx_gene1]
             self.gene2 = tmp[idx_gene2]
-            # left and right paired reads separate, take minimum value
-            self.pair_cnt = min(tmp[idx_pair_cnt], tmp[idx_pair_cnt+1]) 
+            # left and right paired reads separate, take maximum value
+            self.pair_cnt = max(tmp[idx_pair_cnt], tmp[idx_pair_cnt+1]) 
         elif self.tool == "arriba":
             self.chr1 = tmp[idx_chr1].split(":")[0]
             self.pos1 =  tmp[idx_pos1].split(":")[1]
