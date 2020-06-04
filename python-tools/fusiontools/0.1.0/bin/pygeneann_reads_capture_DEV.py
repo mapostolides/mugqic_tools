@@ -791,7 +791,7 @@ class CffFusion():
                 
         if debug: 
             print(set(genes1.keys()), set(genes2.keys()) )
-            print(gene_ann.is_coding('PNMA6A')['PNMA6A'].tostring())
+            #print(gene_ann.is_coding('PNMA6A')['PNMA6A'].tostring())
             #print(.__gene_intervals['PNMA6A'])
             #print(gene_ann.is_coding([gene_name for gene_name in set(genes2.keys())][0]))
             #print([gene_name for gene_name in set(genes2.keys())])
@@ -805,11 +805,9 @@ class CffFusion():
         for gene_name in set(genes2.keys()):
             if gene_ann.is_coding(gene_name):
                 type2.append("CodingGene")
-                if debug: print("CodingGene")
                 id2.append(str(gene_ann.get_coding_gene_idx(gene_name)))
             else:
                 type2.append("NoncodingGene")
-                if debug: print("NoncodingGene")
         # Calculate score for every gene pair, choose the best
         
         # get best score for current gene combination   
@@ -883,7 +881,15 @@ class CffFusion():
                     gene2_is_coding = gene_ann.is_coding(self.reann_gene2)
                 else:
                     gene2_is_coding = False
-                if debug: print("gene1_is_coding:", gene1_is_coding, "gene2_is_coding", gene2_is_coding)
+                if debug: 
+                    print("gene1_is_coding:", gene1_is_coding, "gene2_is_coding", gene2_is_coding)
+                    #print("gene1_is_coding:", gene1_is_coding, "gene2_is_coding", gene2_is_coding)
+                    #print("self.reann_gene1", self.reann_gene1, "self.reann_gene2", self.reann_gene2)
+                    #print("GeneAnnotation coding gene list", gene_ann._GeneAnnotation__coding_gene_list)#[reann_gene1])
+                    #print("gene_ann", gene_ann._GeneAnnotation__gene_intervals)#[reann_gene1])
+                    #print("gene 1 is coding", gene_ann._GeneAnnotation__gene_intervals[self.reann_gene1].is_coding)#[reann_gene1])
+                    #print("gene 1 is coding", gene_ann._GeneAnnotation__gene_intervals[self.reann_gene1].tostring())#[reann_gene1])
+                    #print("gene_ann", dir(gene_ann))#[reann_gene1])
                 if gene1_is_coding and gene2_is_coding:
                     for id in id1:
                         tmp = id.split("_")
@@ -1397,6 +1403,7 @@ class GeneInterval():
             self.is_contradictory = True # contradictory gene annotation, will not be used
             self.transcript_ids = []
         else:
+            if debug: print([gene_bed.tostring() for gene_bed in bed_ann_list if gene_bed.type == "cds"])
             self.gene_name = bed_ann_list[0].gene_name
             self.chr = bed_ann_list[0].chr
             self.strand= bed_ann_list[0].strand
@@ -1590,7 +1597,8 @@ class GeneAnnotation():
        #     print key, [(geneBed.gene_id, geneBed.start, geneBed.end ) for geneBed in tmp_dict[key]]
             # CTD-2588J6.2 [('ENSG00000261029', 82203901, 82203952), ('ENSG00000261029', 82203953, 82209036), ('ENSG00000261029', 82209037, 82209408)]
         #... TEST
-
+        if debug == 2: print("tmp_dict", [[gene for gene in tmp_dict[key]] for key in tmp_dict.keys()])
+        #debug
         for gene_name in tmp_dict:
             self.__gene_intervals.setdefault(gene_name, GeneInterval(tmp_dict[gene_name]))
 
@@ -1702,8 +1710,7 @@ class GeneAnnotation():
         for key in self.__gene_name_idx_map:
             print key, self.__gene_name_idx_map[key]
     # whether a gene include coding exon (cds)
-    def is_coding(self, gene_name): #debug
-        #return self.__gene_intervals[gene_name].is_coding 
+    def is_coding(self, gene_name):
         return self.__gene_intervals[gene_name].is_coding 
     # where a gene has contradictory annotations
     def is_contradictory(self, gene_name):
