@@ -1,6 +1,6 @@
 #!/bin/bash
 module load R/3.5.1
-module load python/2.7.11
+#module load python/2.7.11
 fusiontools_dir=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin
 cff=$1
 outdir=$2

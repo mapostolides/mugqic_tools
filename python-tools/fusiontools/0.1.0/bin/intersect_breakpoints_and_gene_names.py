@@ -14,6 +14,7 @@ parser.add_argument('cff', action='store', help='CFF file')
 
 args = parser.parse_args()
 cff=args.cff
+#cff="/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/NEG_CONTROL_BEERS.benchmark.June-5-2020/merged.cff.renamed.reann"
 
 #INTERSECT FUSIONS BY BREAKPOINTS
 def intersect_fusions_by_breakpoints():

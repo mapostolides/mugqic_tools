@@ -25,30 +25,59 @@ run_pipeline (){
   genome_fasta=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/pipeline/config_reference_files/human_g1k_v37_decoy.fasta
 
   #Rename cff
-  #python $fusiontools/rename_cff_file_genes-GENAP.py $cff $gene_info_file > $outdir/$(basename $cff).renamed
+  python $fusiontools/rename_cff_file_genes-GENAP.py $cff $gene_info_file > $outdir/$(basename $cff).renamed
   cff=$outdir/$(basename $cff).renamed
 
   #Annotate cff
-  #python $fusiontools/reann_cff_fusion.py $cff $gene_bed $genome_fasta > $outdir/$(basename $cff).reann 
+  python $fusiontools/reann_cff_fusion.py $cff $gene_bed $genome_fasta > $outdir/$(basename $cff).reann 
   cff=$outdir/$(basename $cff).reann
 
   #Merge
   cluster=$outdir/$(basename $cff).cluster
-  #sh $fusiontools/RUN_cluster_genes_breakpoints.sh $cff $outdir > $cluster
+  source /home/mapostolides/miniconda3/etc/profile.d/conda.sh
+  sh $fusiontools/RUN_cluster_genes_breakpoints.sh $cff $outdir > $cluster
+
+  #FILTERS
+  echo blacklist, RT, callerfilter2
+  blck_script_dir=/hpf/largeprojects/ccmbio/mapostolides/MODULES/FusionAnnotator/TEST_FusionAnnotator
+  #$blck_script_dir/blacklist_filter_recurrent_breakpoints.sh $cff $cluster $outdir | grep -v ReadThrough | awk '$8 ~ /.,./' > $outdir/$(basename $cluster).blck_filter.RT_filter.callerfilter2
+  $blck_script_dir/blacklist_filter_recurrent_breakpoints.sh $cff $cluster $outdir | grep -v ReadThrough > $outdir/$(basename $cluster).blck_filter.RT_filter.callerfilter2
+  cluster=$outdir/$(basename $cluster).blck_filter.RT_filter.callerfilter2
+  
+  echo ANC adjacent noncoding filter
+  $fusiontools/filter_adjacent_noncoding.py $cluster > $outdir/$(basename $cluster).ANC_filter  
+  cluster=$outdir/$(basename $cluster).ANC_filter
 
   #Benchmark
-  #/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster.sh $outdir $truth_fusions $cff $cluster true true true true false
-  /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster.sh $outdir $truth_fusions $cff $cluster false true true true false
+  /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster-GENAP.sh $outdir $truth_fusions $cff $cluster true 
+}
+benchmark_pertool (){
+    cff=$1
+    truth_fusions=$2
+    outdir=$3
+    mkdir -p $outdir
+    # run benchmarking toolkit, no filters 
+    /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cff_pertool.sh $outdir $truth_fusions $cff
 }
 
-date=June-1-2020
+date=June-11-2020
 
-# DIPG -- benchmark experimentally validated in RNA
-outdir=$test_dir/DIPG.RNA_validated.benchmark.$date
-gene_bed=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/annotation/ens_known_genes.renamed.ENSG.bed
-truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/DIPG.RNA_validated.renamed.dat
-cff=/hpf/largeprojects/ccmbio/mapostolides/DIPG/run_DIPG_samples/DIPG_output_7CALLERS_April-17-2020/fusions/cff/merged.cff
-#run_pipeline $outdir $cff $gene_bed $truth_fusions
+#STJUDE .cff fusions
+cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/stjude_validation/St-Jude-fusions.cff
+outdir=$test_dir/STJUDE.annotate_cff_fusions.$date
+gene_bed=$gene_bed_total
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/stjude.truth_set.no_NA.uniq.renamed.dat
+run_pipeline $outdir $cff $gene_bed $truth_fusions
+exit 0
+
+#STJUDE
+outdir=$test_dir/STJUDE.benchmark.$date
+cluster=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/stjude_validation/stjude_output.April-23-2020/fusions/cff/merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter
+cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/stjude_validation/stjude_output.April-23-2020/fusions/cff/merged.cff.renamed.reann
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/stjude.truth_set.no_NA.uniq.renamed.dat
+/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster-GENAP.sh $outdir $truth_fusions $cff $cluster true
+exit 0
+
 
 #BT474.KPL4.MCF7.SKBR3
 outdir=$test_dir/BT474.KPL4.MCF7.SKBR3.benchmark.$date
@@ -56,27 +85,61 @@ gene_bed=$gene_bed_total
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/BT474.KPL4.MCF7.SKBR3.truth_set.dat
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output.BT474.KPL4.MCF7.SKBR3-April-9-2020/fusions/cff/merged.cff
 run_pipeline $outdir $cff $gene_bed $truth_fusions
+
 exit 0
+#UHRR
+#cat merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter | awk '{$15="UHR";print $0}'| sed 's/ /\t/g'  > merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter.UHRR; mv merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter.UHRR merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter
+outdir=$test_dir/UHRR.benchmark.$date
+gene_bed=$gene_bed_total
+cff=/hpf/largeprojects/ccmbio/mapostolides/fusion_pipeline_runs/UHRR/output_Feb5_2020/fusions/cff/merged.cff.renamed.reann
+#rename samples to UHR
+cat $cff  | awk '{$8="UHR";print $0}'| sed 's/ /\t/g' > $outdir/$(basename $cff).UHR
+cff=$outdir/$(basename $cff).UHR
+cluster=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/UHRR.benchmark.June-9-2020/merged.cff.renamed.reann.cluster.blck_filter.RT_filter.callerfilter2.ANC_filter
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/UHR.truth_fusions.renamed.dat
+#sh /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster-GENAP.sh $outdir $truth_fusions $cff $cluster true 
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
+benchmark_pertool $cff $truth_fusions $outdir
+exit 0
+
+#NEGATIVE CONTROL BEERS
+outdir=$test_dir/NEG_CONTROL_BEERS.benchmark.$date
+gene_bed=$gene_bed_total
+cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/montreal_benchmark_validation/negative_control_beers/output-7CALLERS-April-17-2020/fusions/cff/merged.cff
+
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/DIPG.RNA_validated.renamed.dat
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
+
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
+# DIPG -- benchmark experimentally validated in RNA
+outdir=$test_dir/DIPG.RNA_validated.benchmark.June-5-2020
+gene_bed=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/annotation/ens_known_genes.renamed.ENSG.bed
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/DIPG.RNA_validated.renamed.dat
+cff=/hpf/largeprojects/ccmbio/mapostolides/DIPG/run_DIPG_samples/DIPG_output_7CALLERS_April-17-2020/fusions/cff/merged.cff
+run_pipeline $outdir $cff $gene_bed $truth_fusions
+
+exit 0
+#BT474.KPL4.MCF7.SKBR3
+outdir=$test_dir/BT474.KPL4.MCF7.SKBR3.benchmark.$date
+gene_bed=$gene_bed_total
+truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/BT474.KPL4.MCF7.SKBR3.truth_set.dat
+cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output.BT474.KPL4.MCF7.SKBR3-April-9-2020/fusions/cff/merged.cff
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
 
 # SIM50 2500 fusions files:
 outdir=$test_dir/SIM50.2500_TP.benchmark.$date
 gene_bed=$gene_bed_total
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/sim50.truth_set.2500_fusions.dat
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM-April-17-2020/fusions/cff/merged.cff
-run_pipeline $outdir $cff $gene_bed $truth_fusions
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
 
 #SIM101 2500 fusions files, same truth set as SIM50
 outdir=$test_dir/SIM101.2500_TP.benchmark.$date
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/sim_101.truth_set.2500_fusions.dat
 gene_bed=$gene_bed_total
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM_101-April-23-2020/fusions/cff/merged.cff
-run_pipeline $outdir $cff $gene_bed $truth_fusions
+#run_pipeline $outdir $cff $gene_bed $truth_fusions
 
-#NEGATIVE CONTROL BEERS
-outdir=$test_dir/NEG_CONTROL_BEERS.benchmark.$date
-gene_bed=$gene_bed_total
-cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/montreal_benchmark_validation/negative_control_beers/output-7CALLERS-April-17-2020/fusions/cff/merged.cff
-run_pipeline $outdir $cff $gene_bed $truth_fusions
 
 # SIM45.SIM52.combined
 gene_bed=$gene_bed_total
