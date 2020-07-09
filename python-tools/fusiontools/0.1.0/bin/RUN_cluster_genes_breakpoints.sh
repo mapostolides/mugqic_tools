@@ -6,7 +6,7 @@ cff=$1
 outdir=$2
 
 #Generate intersections file for both gene name and breakpoint
-fid_intersection_file=$outdir/$dataset_name.FID.intersections.tsv
+fid_intersection_file=$outdir/FID.intersections.tsv
 python $fusiontools_dir/intersect_breakpoints_and_gene_names.py $cff > $fid_intersection_file 
 
 # Graph clustering

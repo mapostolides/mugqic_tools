@@ -32,8 +32,10 @@ def intersect_fusions_by_breakpoints():
     df_bed=bedtools.BedTool.from_dataframe(df_bed)
     
     #Intersect fusions: NOTE: only keeps fusions that intersect
-    print >> sys.stderr, "Intersect fusions: NOTE: only keeps fusions that intersect"
-    df_intersect=df_bed.pair_to_pair(df_bed, slop=100, rdn=True)
+    #print >> sys.stderr, "Intersect fusions: NOTE: only keeps fusions that intersect"
+    #df_intersect=df_bed.pair_to_pair(df_bed, slop=100, rdn=True)
+    print >> sys.stderr, "Intersect fusions: NOTE: rdn=False, keeps self-intersections"
+    df_intersect=df_bed.pair_to_pair(df_bed, slop=100, rdn=False)
     df=df_intersect.to_dataframe(header=None).iloc[:,0:14]
     df.columns = ['chr1','pos1','pos1_2','chr2','pos2','pos2_2', 'fusion_id', 'chr1_1','pos1_1','pos1_2_1','chr2_1','pos2_1','pos2_2_1', 'fusion_id_lst'] 
     df=df[['fusion_id','fusion_id_lst']]
