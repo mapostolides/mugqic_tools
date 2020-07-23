@@ -57,14 +57,15 @@ done
 #echo genome_fasta $genome_fasta 
 #echo truth_set $truth_set
 #
-rename=1
-annotate=1
+#rename=1
+#annotate=1
 merge=1
-output_ANC_RT_SG=1
-RT_call_filter=1
-blck_filter=1
-ANC_filter=1
-benchmark=1
+#output_ANC_RT_SG=1
+#RT_call_filter=1
+#blck_filter=1
+#ANC_filter=1
+#rank=1
+#benchmark=1
 
 fusiontools=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin
 #Check CFF file format:
@@ -91,7 +92,7 @@ cff=$outdir/$(basename $cff).reann
 cluster=$outdir/$(basename $cff).cluster
 if [ $merge -eq 1 ]; then
   echo Merge cff
-  source /home/mapostolides/miniconda3/etc/profile.d/conda.sh
+  #source /home/mapostolides/miniconda3/etc/profile.d/conda.sh
   sh $fusiontools/RUN_cluster_genes_breakpoints.sh $cff $outdir > $cluster
 fi
 
@@ -124,6 +125,14 @@ if [ $ANC_filter -eq 1 ]; then
   $fusiontools/filter_adjacent_noncoding.py $cluster > $outdir/$(basename $cluster).ANC_filter  
 fi
 cluster=$outdir/$(basename $cluster).ANC_filter
+rank_cluster_file.py 
+
+#Rank and generate final.cluster
+if [ $benchmark -eq 1 ]; then
+   echo Rank and generate final.cluster 
+  python rank_cluster_file.py $cluster > $outdir/final.cluster  
+fi
+cluster=$outdir/final.cluster
 
 #Benchmark
 if [ $benchmark -eq 1 ]; then
