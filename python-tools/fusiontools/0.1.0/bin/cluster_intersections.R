@@ -1,7 +1,6 @@
-#! /Library/Frameworks/R.framework/Resources/bin/Rscript
-
+if (!requireNamespace("RBGL", quietly = TRUE))
+  BiocManager::install("RBGL")
 library(RBGL)
-
 #Command args
 args <- commandArgs(TRUE)
 fid_intersection_file <- as.character(args[1])
