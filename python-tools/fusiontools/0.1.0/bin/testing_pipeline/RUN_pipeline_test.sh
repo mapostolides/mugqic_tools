@@ -1,6 +1,6 @@
 #!/bin/bash
 #NOTES
-#$reann_test_dir/cff_files/NOTES-merged.cff_RPRD2--LAMC2
+#$reann_test_dir/cff_iles/NOTES-merged.cff_RPRD2--LAMC2
 #source /home/mapostolides/miniconda3/etc/profile.d/conda.sh
 source /hpf/largeprojects/ccmbio/mapostolides/MODULES/miniconda3/etc/profile.d/conda.sh
 conda activate metafusion
@@ -18,10 +18,10 @@ cff_dir=$reann_test_dir/cff_files
 benchmark_toolkit=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT
 
 run_pipeline (){
-  rename=1
-  annotate=1
-  merge=1
-  output_ANC_RT_SG=1
+  #rename=1
+  #annotate=1
+  #merge=1
+  #output_ANC_RT_SG=1
   RT_call_filter=1
   blck_filter=1
   ANC_filter=1
@@ -30,8 +30,9 @@ run_pipeline (){
   mkdir -p $outdir
   cff=$2
   gene_bed=$3
-  gene_info_file=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/pipeline/config_reference_files/Homo_sapiens.gene_info
   truth_fusions=$4
+  num_tools=$5
+  gene_info_file=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/pipeline/config_reference_files/Homo_sapiens.gene_info
   fusiontools=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin
   genome_fasta=/hpf/largeprojects/ccmbio/mapostolides/gene_fusion/pipeline/config_reference_files/human_g1k_v37_decoy.fasta
 
@@ -69,22 +70,24 @@ run_pipeline (){
     python $fusiontools/output_ANC_RT_SG.py $cluster > $cluster.ANC_RT_SG 
   fi
 
-  #ReadThrough Callerfilter2
+  #ReadThrough Callerfilter
   if [ $RT_call_filter -eq 1 ]; then
-    echo ReadThrough, callerfilter2
+    echo ReadThrough, callerfilter
     cat $cluster | grep ReadThrough > $outdir/$(basename $cluster).ReadThrough
-    cat $cluster | grep -v ReadThrough | awk '$8 ~ /.,./' > $outdir/$(basename $cluster).RT_filter.callerfilter2
-    #cat $cluster | grep -v ReadThrough  > $outdir/$(basename $cluster).RT_filter.callerfilter2
+    $fusiontools/callerfilter_num.py --cluster $cluster  --num_tools $num_tools | grep -v ReadThrough  > $outdir/$(basename $cluster).RT_filter.callerfilter.$num_tools
+    #python $fusiontools/callerfilter_num.py --cluster $cluster  --num_tools $num_tools | grep -v ReadThrough  > $outdir/$(basename $cluster).RT_filter.callerfilter.$num_tools
+    #cat $cluster | grep -v ReadThrough | awk '$8 ~ /.,./' > $outdir/$(basename $cluster).RT_filter.callerfilter2
   fi
-  cluster_RT_call=$outdir/$(basename $cluster).RT_filter.callerfilter2 
+  cluster_RT_call=$outdir/$(basename $cluster).RT_filter.callerfilter.$num_tools 
 
   # Blacklist Filter
   if [ $blck_filter -eq 1 ]; then
     echo blacklist filter
     blck_script_dir=/hpf/largeprojects/ccmbio/mapostolides/MODULES/FusionAnnotator/TEST_FusionAnnotator
-  $blck_script_dir/blacklist_filter_recurrent_breakpoints.sh $cff $cluster_RT_call $outdir  > $outdir/$(basename $cluster).RT_filter.callerfilter2.blck_filter
+  $blck_script_dir/blacklist_filter_recurrent_breakpoints.sh $cff $cluster_RT_call $outdir  > $outdir/$(basename $cluster).RT_filter.callerfilter.$num_tools.blck_filter
   fi
-  cluster=$outdir/$(basename $cluster).RT_filter.callerfilter2.blck_filter
+  cluster=$outdir/$(basename $cluster).RT_filter.callerfilter.$num_tools.blck_filter
+
 
   # Adjacent Noncoding filter 
   if [ $ANC_filter -eq 1 ]; then
@@ -105,7 +108,7 @@ benchmark_pertool (){
     outdir=$3
     mkdir -p $outdir
     # run benchmarking toolkit, no filters 
-    /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cff_pertool.sh $outdir $truth_fusions $cff
+    $benchmark_toolkit/benchmarking_cff_pertool.sh $outdir $truth_fusions $cff
 }
 benchmark_cff_renamed_reann_pertool (){
     cff=$1
@@ -113,23 +116,39 @@ benchmark_cff_renamed_reann_pertool (){
     outdir=$3
     mkdir -p $outdir
     # run benchmarking toolkit, no filters 
-    /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cff.renamed.reann_pertool.sh $outdir $truth_fusions $cff
+    $benchmark_toolkit/benchmarking_cff.renamed.reann_pertool.sh $outdir $truth_fusions $cff
 }
 
-date=July-8-2020
+run_fusionannotator () {
+  outdir=$1
+  cluster=$2
+  echo Run FusionAnnotator and create cancer DB files
+  /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/run_FusionAnnotator_cluster.sh $outdir $cluster
+}
+
+date=July-22-2020
+
 #DATASETS
+trusight=0
 prostate=0
 melanoma_cells=0
 dipg=0
 dipg_T=0
 st_jude=0
-brca_4=1
+brca_4=0
 uhrr=0
 beers_neg=0
 sim_50=0
 sim101=0
 sim45_sim52=0
 sim50_test=0
+
+# ROB trusight
+if [ $trusight -eq 1 ]; then
+  cluster=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/fusionOutput.txt
+  outdir=$test_dir/ROB.TRUSIGHT.cancer_DB_hits.$date
+  run_fusionannotator $outdir $cluster
+fi
 
 #SIM50 test cases
 if [ $sim50_test -eq 1 ]; then
@@ -160,7 +179,7 @@ truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TO
 #cff=/hpf/largeprojects/ccmbio/mapostolides/MODULES/run_chimerascan/RUNS/prostate_cffs/8Callers.prostate.chimerascan_no_SRR1657556.cff
 cff=/hpf/largeprojects/ccmbio/mapostolides/MODULES/run_chimerascan/RUNS/prostate_cffs/8Callers.prostate.chimerascan.cff
 # Make all sample names the same
-cat $cff  | awk '{$8="LNCaP_prostate_siCTCF";print $0}'| sed 's/ /\t/g' > $outdir/$(basename $cff).prostate 
+#cat $cff  | awk '{$8="LNCaP_prostate_siCTCF";print $0}'| sed 's/ /\t/g' > $outdir/$(basename $cff).prostate 
 cff=$outdir/$(basename $cff).prostate
 # Include only defuse ericscript integrate chimerascan
 #cat $cff | grep 'defuse\|ericscript\|integrate\|chimerascan' > $outdir/$(basename $cff).4callers
@@ -172,14 +191,17 @@ outdir=$test_dir/kumar_prostate.benchmark.chimerascan.ANC_RT_SG.$date
 #outdir=$test_dir/kumar_prostate.benchmark.chimerascan.4callers.ANC_RT_SG.$date
 mkdir $outdir
 #cff_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-2-2020/8Callers.prostate.chimerascan_no_SRR1657556.cff.prostate.renamed.reann
-cff_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.reformat.renamed.reann
+#cff_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.reformat.renamed.reann
 #cff_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.4callers.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.4callers.reformat.renamed.reann
 #cluster_ANC_RT_SG=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-2-2020/8Callers.prostate.chimerascan_no_SRR1657556.cff.prostate.renamed.reann.cluster.ANC_RT_SG
-cluster_ANC_RT_SG=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.reformat.renamed.reann.cluster.ANC_RT_SG
+#cluster_ANC_RT_SG=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.reformat.renamed.reann.cluster.ANC_RT_SG
 #cluster_ANC_RT_SG=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.4callers.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.4callers.reformat.renamed.reann.cluster.ANC_RT_SG
-#/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster-GENAP.sh $outdir $truth_fusions $cff_reann $cluster_ANC_RT_SG true
 
-benchmark_pertool $cff $truth_fusions $outdir
+cff_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.4callers.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.4callers.reformat.renamed.reann
+cluster_ANC_RT_SG=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/kumar_prostate.benchmark.with_chimerascan.4callers.July-7-2020/8Callers.prostate.chimerascan.cff.prostate.4callers.reformat.renamed.reann.cluster.ANC_RT_SG
+/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/benchmarking_cluster-GENAP.sh $outdir $truth_fusions $cff_reann $cluster_ANC_RT_SG true
+
+#benchmark_pertool $cff $truth_fusions $outdir
 
 #cluster_RT=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/kumar_2016_test/all-6-samples-pipeline-runs/output-June-17-2020/fusions/cff/merged.cff.renamed.reann.cluster.ReadThrough
 #truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/kumar_2016_test/validation_testing/kumar.ReadThrough.truth_set.LNCaP_prostate_siCTCF.dat
@@ -217,6 +239,16 @@ gene_bed=$gene_bed_total
 outdir=$test_dir/melanoma.benchmark.$date
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/melanoma_validtaion/melanoma.truth_fusions.renamed.dat
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/melanoma_validtaion/output-June-4-2020/fusions/cff/merged.cff
+
+#caller #s 2-7
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 2
+nums=$(echo 3 4 5 6 7)
+for num in ${nums[@]};do
+  cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/melanoma_validtaion/output-June-4-2020/fusions/cff/merged.cff
+  run_pipeline $outdir $cff $gene_bed $truth_fusions $num
+done
+exit 0
+
 #run_pipeline $outdir $cff $gene_bed $truth_fusions
 #benchmark_pertool $cff $truth_fusions $outdir
 #ADD cancer counts from Metacaller
@@ -298,7 +330,22 @@ outdir=$test_dir/BT474.KPL4.MCF7.SKBR3.benchmark.$date
 gene_bed=$gene_bed_total
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/BT474.KPL4.MCF7.SKBR3.truth_set.dat
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output.BT474.KPL4.MCF7.SKBR3-April-9-2020/fusions/cff/merged.cff
-#run_pipeline $outdir $cff $gene_bed $truth_fusions
+
+#caller #s 2-7
+nums=$(echo 2 3 4 5 6 7)
+for num in ${nums[@]};do 
+  cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output.BT474.KPL4.MCF7.SKBR3-April-9-2020/fusions/cff/merged.cff 
+  run_pipeline $outdir $cff $gene_bed $truth_fusions $num
+done
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 2
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 3
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 4
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 5
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 6
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 7
+
+exit 0 
+
 #benchmark_pertool $cff $truth_fusions $outdir
 # benchmark renamed + annotated .cff, allows us to look at distribution of categories
 cff_renamed_reann=/hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/BT474.KPL4.MCF7.SKBR3.benchmark.June-18-2020/merged.cff.renamed.reann
@@ -355,6 +402,16 @@ gene_bed=$gene_bed_total
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/sim50.truth_set.2500_fusions.dat
 #truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/haas_2019_simulated_dataset_FILES/sim_50.truth_set.dat
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM-April-17-2020/fusions/cff/merged.cff
+
+#caller #s 2-7
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 2
+nums=$(echo 3 4 5 6 7)
+for num in ${nums[@]};do
+  cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM-April-17-2020/fusions/cff/merged.cff
+  run_pipeline $outdir $cff $gene_bed $truth_fusions $num
+done
+exit 0
+
 run_pipeline $outdir $cff $gene_bed $truth_fusions
 echo $cff
 #benchmark_pertool $cff $truth_fusions $outdir
@@ -369,6 +426,16 @@ outdir=$test_dir/SIM101.2500_TP.benchmark.$date
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/sim_101.truth_set.2500_fusions.dat
 gene_bed=$gene_bed_total
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM_101-April-23-2020/fusions/cff/merged.cff
+
+#caller #s 2-7
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 2
+nums=$(echo 3 4 5 6 7)
+for num in ${nums[@]};do
+  cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/haas_2019_validation/output-SIM_101-April-23-2020/fusions/cff/merged.cff
+  run_pipeline $outdir $cff $gene_bed $truth_fusions $num
+done
+exit 0
+
 run_pipeline $outdir $cff $gene_bed $truth_fusions
 #benchmark_pertool $cff $truth_fusions $outdir
 cff_renamed_reann=$outdir/merged.cff.renamed.reann
@@ -382,6 +449,17 @@ gene_bed=$gene_bed_total
 outdir=$test_dir/SIM45.SIM52.benchmark.$date
 cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/montreal_benchmark_validation/sim45.sim52.combined/output-7CALLERS-April-22-2020/fusions/cff/merged.cff
 truth_fusions=/hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/renamed_truth_sets/sim45.sim52.truth_set.dat
+
+#caller #s 2-7
+#run_pipeline $outdir $cff $gene_bed $truth_fusions 2
+nums=$(echo 3 4 5 6 7)
+for num in ${nums[@]};do
+  cff=/hpf/largeprojects/ccmbio/mapostolides/validate_fusion/montreal_benchmark_validation/sim45.sim52.combined/output-7CALLERS-April-22-2020/fusions/cff/merged.cff
+  run_pipeline $outdir $cff $gene_bed $truth_fusions $num
+done
+exit 0
+
+
 run_pipeline $outdir $cff $gene_bed $truth_fusions
 benchmark_pertool $cff $truth_fusions $outdir
 fi
@@ -452,4 +530,6 @@ gene_bed=$bed_dir/ens_known_genes.MIR548H2.FOSB.AADACL2.bed
 #1 entry, failing due to breakpt being 1 bp off:
 #cff=$reann_test_dir/FOSB--AADACL2/FOSB--AADACL2.cff.test
 #run_pipeline $outdir $cff $gene_bed
+
+sh /hpf/largeprojects/ccmbio/mapostolides/mugqic_tools-my-version/python-tools/fusiontools/0.1.0/bin/testing_pipeline/testing.sh -a false -b false -f /hpf/largeprojects/ccmbio/mapostolides/MODULES/RUN_BENCHMARKING_TOOLKIT/run_FusionAnnotator_cluster.sh -v false
 
